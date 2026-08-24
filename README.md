@@ -6,7 +6,7 @@
 <h1 align="center">💰 FT Coin</h1>
 
 <p align="center">
-  <strong>Projeto desenvolvido para a disciplina SI300 – Programação Orientada a Objetos I</strong><br>
+  <strong>Projeto desenvolvido para as disciplinas SI300 e SI400 – Programação Orientada a Objetos I e II</strong><br>
   Faculdade de Tecnologia da Universidade Estadual de Campinas  (FT/UNICAMP)
 </p>
 
