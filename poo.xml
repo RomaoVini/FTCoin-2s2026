@@ -33,6 +33,7 @@
     </dependencies>
 
     <build>
+        <testSourceDirectory>src/test</testSourceDirectory>
         <plugins>
             <!-- Sem esta versão do Surefire, o Maven antigo não roda JUnit 5 -->
             <plugin>

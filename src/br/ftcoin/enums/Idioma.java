@@ -1,4 +1,4 @@
-package br.unicamp.ft.ftcoin.enums;
+package br.ftcoin.enums;
 
 import java.util.Locale;
 

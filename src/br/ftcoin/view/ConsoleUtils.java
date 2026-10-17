@@ -1,6 +1,6 @@
-package br.unicamp.ft.ftcoin.view;
+package br.ftcoin.view;
 
-import br.unicamp.ft.ftcoin.util.I18n;
+import br.ftcoin.util.I18n;
 
 import java.util.Scanner;
 

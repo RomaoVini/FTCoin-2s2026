@@ -1,4 +1,4 @@
-package br.unicamp.ft.ftcoin.dao;
+package br.ftcoin.dao;
 
 import java.util.List;
 import java.util.Optional;

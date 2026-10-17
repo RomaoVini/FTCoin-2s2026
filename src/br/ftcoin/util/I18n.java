@@ -1,6 +1,6 @@
-package br.unicamp.ft.ftcoin.util;
+package br.ftcoin.util;
 
-import br.unicamp.ft.ftcoin.enums.Idioma;
+import br.ftcoin.enums.Idioma;
 
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;

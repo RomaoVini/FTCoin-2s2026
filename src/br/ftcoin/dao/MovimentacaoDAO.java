@@ -1,6 +1,6 @@
-package br.unicamp.ft.ftcoin.dao;
+package br.ftcoin.dao;
 
-import br.unicamp.ft.ftcoin.model.Movimentacao;
+import br.ftcoin.model.Movimentacao;
 
 import java.util.List;
 
