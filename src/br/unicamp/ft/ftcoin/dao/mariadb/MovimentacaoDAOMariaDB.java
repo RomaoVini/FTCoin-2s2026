@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class MovimentacaoMariaDBDAO implements MovimentacaoDAO {
+public class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
 
     private Connection getConnection() throws SQLException {
         // Configure aqui a sua conexão com o MariaDB
