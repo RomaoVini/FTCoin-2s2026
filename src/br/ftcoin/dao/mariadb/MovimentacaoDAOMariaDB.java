@@ -1,7 +1,8 @@
 package br.ftcoin.dao.mariadb;
 
-import br.ftcoin.model.Movimentacao;
+import br.ftcoin.dao.ConnectionFactory;
 import br.ftcoin.dao.MovimentacaoDAO;
+import br.ftcoin.model.Movimentacao;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
