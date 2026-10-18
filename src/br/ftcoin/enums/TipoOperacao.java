@@ -1,6 +1,6 @@
 package br.ftcoin.enums;
 
-import br.ftcoin.test.ValidacaoException;
+import test.ValidacaoException;
 
 public enum TipoOperacao {
     COMPRA('C'),

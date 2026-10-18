@@ -1,4 +1,4 @@
-package br.ftcoin.test;
+package test;
 
 public class ValidacaoException extends RuntimeException {
     public ValidacaoException(String mensagem) {
