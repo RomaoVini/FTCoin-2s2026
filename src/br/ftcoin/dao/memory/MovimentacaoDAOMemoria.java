@@ -1,9 +1,8 @@
 package br.ftcoin.dao.memory;
 
 import br.ftcoin.dao.MovimentacaoDAO;
-import br.ftcoin.test.ValidacaoException;
 import br.ftcoin.model.Movimentacao;
-
+import br.ftcoin.test.ValidacaoException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -12,8 +11,7 @@ import java.util.Optional;
 import java.util.TreeMap;
 
 //com persistência de memória os dados existem apenas enquanto a aplicação está rodando.
-public class MovimentacaoDAOMemoria implements MovimentacaoDAO{
-
+public final class MovimentacaoDAOMemoria implements MovimentacaoDAO {
     //o TreeMap mantém as movimentações ordenadas pelo identificador
     private final Map<Integer, Movimentacao> armazenamento = new TreeMap<>();
     private int proximoId = 1;
