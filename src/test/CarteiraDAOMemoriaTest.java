@@ -1,6 +1,7 @@
 
-package br.ftcoin.dao.memory;
 
+
+import br.ftcoin.dao.memory.CarteiraDAOMemoria;
 import br.ftcoin.model.Carteira;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
