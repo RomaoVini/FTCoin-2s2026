@@ -3,7 +3,7 @@ package br.ftcoin.view;
 import br.ftcoin.controller.MovimentacaoController;
 import br.ftcoin.enums.TipoOperacao;
 import br.ftcoin.model.Movimentacao;
-import test.ValidacaoException;
+import br.ftcoin.exception.ValidacaoException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

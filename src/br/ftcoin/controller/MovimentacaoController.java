@@ -4,7 +4,7 @@ import br.ftcoin.dao.MovimentacaoDAO;
 import br.ftcoin.dao.mariadb.MovimentacaoDAOMariaDB;
 import br.ftcoin.enums.TipoOperacao;
 import br.ftcoin.model.Movimentacao;
-import test.ValidacaoException;
+import br.ftcoin.exception.ValidacaoException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

@@ -2,7 +2,6 @@ package br.ftcoin.util;
 
 import br.ftcoin.enums.Idioma;
 
-import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
@@ -59,9 +58,7 @@ public class I18n {
         }
 
         try {
-            String rawValue = bundle.getString(chave);
-            // Corrige a codificação ISO-8859-1 (padrão de leitura legado) para UTF-8 nativo
-            return new String(rawValue.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
+            return bundle.getString(chave);
         } catch (MissingResourceException e) {
             // Retorno de fallback amigável em vez de lançar exceção ao usuário
             return "!" + chave + "!";

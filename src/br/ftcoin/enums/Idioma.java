@@ -5,9 +5,9 @@ import java.util.Locale;
 //Enumeração que representa os idiomas suportados pelo sistema FT_Coin.
 
 public enum Idioma {
-    PORTUGUES("pt", "BR", "Português (Brasil)", Locale.of("pt", "BR")),
+    PORTUGUES("pt", "BR", "Português (Brasil)", new Locale("pt", "BR")),
     INGLES("en", "US", "English", Locale.US),
-    ESPANHOL("es", "ES", "Español", Locale.of("es", "ES"));
+    ESPANHOL("es", "ES", "Español", new Locale("es", "ES"));
 
     private final String codigo;
     private final String pais;

@@ -33,6 +33,12 @@
     </dependencies>
 
     <build>
+        <sourceDirectory>src/br/ftcoin</sourceDirectory>
+        <resources>
+            <resource>
+                <directory>resources</directory>
+            </resource>
+        </resources>
         <testSourceDirectory>src/test</testSourceDirectory>
         <plugins>
             <!-- Sem esta versão do Surefire, o Maven antigo não roda JUnit 5 -->
