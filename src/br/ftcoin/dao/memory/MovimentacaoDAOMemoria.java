@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
+import test.ValidacaoException;
 
 //com persistência de memória os dados existem apenas enquanto a aplicação está rodando.
 public final class MovimentacaoDAOMemoria implements MovimentacaoDAO {

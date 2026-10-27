@@ -1,7 +1,7 @@
 package br.ftcoin.model;
 
 import br.ftcoin.enums.TipoOperacao;
-import br.ftcoin.test.ValidacaoException;
+import test.ValidacaoException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
