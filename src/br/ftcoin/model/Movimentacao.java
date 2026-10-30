@@ -41,7 +41,7 @@ public class Movimentacao {
 
     private static int validarIdMovimento(int idMovimento){
         if(idMovimento < 0){
-            throw new ValidacaoException("O identificador da movimentação não pode ser negativo.");
+            throw new ValidacaoException("transaction.error.negativeId");      
         }
         return idMovimento;
     }
@@ -56,7 +56,7 @@ public class Movimentacao {
 
     private static int validarIdCarteira(int idCarteira){
         if(idCarteira <= 0){
-            throw new ValidacaoException("Identificador de carteira inválido: " + idCarteira + ".");
+            throw new ValidacaoException("transaction.error.invalidWalletId", String.valueOf(idCarteira));
         }
         return idCarteira;
     }
@@ -71,7 +71,7 @@ public class Movimentacao {
 
     private static LocalDate validarDataOperacao(LocalDate data){
         if(data == null){
-            throw new ValidacaoException("A data da operação é obrigatória.");
+            throw new ValidacaoException("transaction.error.dateRequired");
         }
         return data;
     }
@@ -86,7 +86,7 @@ public class Movimentacao {
 
     private static TipoOperacao validarTipoOperacao(TipoOperacao tipo){
         if(tipo == null){
-            throw new ValidacaoException("O tipo da operação é obrigatório.");
+            throw new ValidacaoException("transaction.error.typeRequired");
         }
         return tipo;
     }
@@ -101,10 +101,10 @@ public class Movimentacao {
 
     private static BigDecimal validarQuantidade(BigDecimal quantidade){
         if(quantidade == null){
-            throw new ValidacaoException("A quantidade é obrigatória.");
+            throw new ValidacaoException("transaction.error.quantityRequired");
         }
         if(quantidade.compareTo(BigDecimal.ZERO) < 0){
-            throw new ValidacaoException("A quantidade não pode ser negativa.");
+            throw new ValidacaoException("transaction.error.quantityNegative");
         }
         return quantidade;
     }

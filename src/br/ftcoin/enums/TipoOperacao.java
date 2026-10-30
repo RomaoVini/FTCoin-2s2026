@@ -23,10 +23,9 @@ public enum TipoOperacao {
             if (tipo.codigo == c) {
                 return tipo;
             }
-        }
-        throw new ValidacaoException("Tipo de operação inválido: '" + codigo + "'. Use 'C' (compra) ou 'V' (venda).");
+        throw new ValidacaoException("validation.operationType.invalid", String.valueOf(codigo));    }
     }
-
+    
     //faz o String.valueOf(tipo) devolver "C" ou "V", como o DAO espera.
     @Override
     public String toString() {

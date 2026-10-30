@@ -1,8 +1,8 @@
 package br.ftcoin.dao.memory;
 
 import br.ftcoin.dao.MovimentacaoDAO;
-import br.ftcoin.model.Movimentacao;
 import br.ftcoin.exception.ValidacaoException;
+import br.ftcoin.model.Movimentacao;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -19,7 +19,7 @@ public final class MovimentacaoDAOMemoria implements MovimentacaoDAO {
     @Override
     public void incluir(Movimentacao movimentacao){
         if(movimentacao == null){
-            throw new ValidacaoException("A movimentação é obrigatória.");
+            throw new ValidacaoException("transaction.error.required");
         }
 
         int id = movimentacao.getIdMovimento();
@@ -27,7 +27,7 @@ public final class MovimentacaoDAOMemoria implements MovimentacaoDAO {
             id = proximoId;
             movimentacao.setIdMovimento(id);
         } else if (armazenamento.containsKey(id)){
-            throw new ValidacaoException("Já existe uma movimentação com o identificador " + id + ".");
+            throw new ValidacaoException("transaction.error.duplicateId", String.valueOf(id));
         }
 
         armazenamento.put(id, movimentacao);
@@ -52,19 +52,18 @@ public final class MovimentacaoDAOMemoria implements MovimentacaoDAO {
                 resultado.add(m);
             }
         }
-        resultado.sort(Comparator.comparing(Movimentacao::getDataOperacao)
-                .thenComparingInt(Movimentacao::getIdMovimento));
+        resultado.sort(Comparator.comparing(Movimentacao::getDataOperacao).thenComparingInt(Movimentacao::getIdMovimento));
         return resultado;
     }
 
     @Override
     public void editar(Movimentacao movimentacao) {
         if (movimentacao == null) {
-            throw new ValidacaoException("A movimentação é obrigatória.");
+            throw new ValidacaoException("transaction.error.required");
         }
         int id = movimentacao.getIdMovimento();
         if (!armazenamento.containsKey(id)) {
-            throw new ValidacaoException("Movimentação " + id + " não encontrada.");
+            throw new ValidacaoException("transaction.error.notFound", String.valueOf(id));
         }
         armazenamento.put(id, movimentacao);
     }
@@ -72,7 +71,7 @@ public final class MovimentacaoDAOMemoria implements MovimentacaoDAO {
     @Override
     public void excluir(Integer id) {
         if (armazenamento.remove(id) == null) {
-            throw new ValidacaoException("Movimentação " + id + " não encontrada.");
+            throw new ValidacaoException("transaction.error.notFound", String.valueOf(id));
         }
     }
 
