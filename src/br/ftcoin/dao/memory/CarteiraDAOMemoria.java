@@ -14,7 +14,7 @@ import java.util.Optional;
 /**
  * Implementa as operações de Carteira em memória.
  */
-public class CarteiraDAOMemoria implements CarteiraDAO {
+public final class CarteiraDAOMemoria implements CarteiraDAO {
 
     private final Map<Integer, Carteira> carteiras =
             new LinkedHashMap<>();
