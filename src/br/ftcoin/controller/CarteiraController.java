@@ -4,6 +4,8 @@ import br.ftcoin.dao.CarteiraDAO;
 import br.ftcoin.dao.DAOFactory;
 import br.ftcoin.exception.ValidacaoException;
 import br.ftcoin.model.Carteira;
+import br.ftcoin.view.CarteiraView;
+import br.ftcoin.view.MenuView;
 
 import java.util.List;
 
@@ -15,6 +17,7 @@ import java.util.List;
 public class CarteiraController {
 
     private final CarteiraDAO dao;
+    private CarteiraView view;
 
         // Escolhe a persistência: "MEMORIA" ou "MARIADB"
     public CarteiraController() {
@@ -29,6 +32,16 @@ public class CarteiraController {
     // Permite injetar um DAO (por exemplo, o de memória nos testes).
     public CarteiraController(CarteiraDAO dao) {
         this.dao = dao;
+    }
+
+        // Usado pelo AppController
+    public CarteiraController(MenuView menuView, CarteiraDAO dao) {
+        this(dao);
+        this.view = new CarteiraView(menuView.getConsoleUtils(), this);
+    }
+
+    public void exibirMenuCarteira() {
+        view.exibirMenu();
     }
 
     public Carteira cadastrar(int id, String titular, String corretora) {
