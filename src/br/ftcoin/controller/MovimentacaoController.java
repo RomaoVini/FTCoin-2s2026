@@ -3,8 +3,11 @@ package br.ftcoin.controller;
 import br.ftcoin.dao.MovimentacaoDAO;
 import br.ftcoin.dao.mariadb.MovimentacaoDAOMariaDB;
 import br.ftcoin.enums.TipoOperacao;
+import br.ftcoin.model.Cotacao;
 import br.ftcoin.model.Movimentacao;
 import br.ftcoin.exception.ValidacaoException;
+import br.ftcoin.service.OraculoCotacao;
+import br.ftcoin.service.OraculoService;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -13,13 +16,23 @@ import java.util.List;
 public class MovimentacaoController {
 
     private final MovimentacaoDAO dao;
+    private final OraculoCotacao oraculo;
 
     public MovimentacaoController() {
-        this(new MovimentacaoDAOMariaDB());
+        this(new MovimentacaoDAOMariaDB(), new OraculoService());
     }
 
     public MovimentacaoController(MovimentacaoDAO dao) {
+        this(dao, new OraculoService());
+    }
+
+    public MovimentacaoController(MovimentacaoDAO dao, OraculoCotacao oraculo) {
         this.dao = dao;
+        this.oraculo = java.util.Objects.requireNonNull(oraculo, "Oráculo de cotações obrigatório");
+    }
+
+    public Cotacao obterCotacao(LocalDate data) {
+        return oraculo.obterCotacao(data);
     }
 
     public Movimentacao cadastrar(int idCarteira, LocalDate data, TipoOperacao tipo, BigDecimal quantidade) {

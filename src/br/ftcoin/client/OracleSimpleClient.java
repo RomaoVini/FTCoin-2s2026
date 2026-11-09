@@ -11,41 +11,30 @@
  *
  * ************************************************************************************************************************
  *
- * Este programa � o m�dulo cliente de um sistema cliente/servidor para demonstra��o do uso de fluxos (streams) de objetos
- * enviados e recebidos pela rede, com uso de uma API propriet�ria para acesso ao servidor.
+ * Este programa demonstra o acesso ao servidor proprietário por meio de OraculoService.
  *
- * Este m�dulo prepara uma requisi��o de cota��es de moeda, informando a feixa de datas das cota��es desejadas e a envia
- * para o servidor, que responde com uma lista (eventualmente vazia) de objetos do tipo ExchangeRate.
+ * O protocolo de rede é encapsulado pelo serviço; este cliente apenas exibe as cotações recebidas.
  *
- * Este cliente ser� usado temporariamente pelos alunos para testes de conex�o e API; posteriormente, suas funcionalidades
- * ser�o incorporadas, com devidas adapta��es, ao projeto FTCoin, ver. 2026.
+ * Projeto FTCoin, ver. 2026.
  *
  * ************************************************************************************************************************
  */
 
 package br.ftcoin.client;
 
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.Socket;
 import java.time.LocalDate;
 import java.util.List;
 
-import br.ftcoin.dto.ExchangeRate;
-import br.ftcoin.network.NetworkRequest;
-import br.ftcoin.network.NetworkResponse;
+import br.ftcoin.model.Cotacao;
+import br.ftcoin.service.OraculoService;
 
 public final class OracleSimpleClient
    {
-   private final static String GROUP_NAME     = "POO2_2s26_A02";
-   private final static String GROUP_PASSWORD = "W90OL8wsC8";
-   private final String        host;
-   private final int           port;
+   private final OraculoService oraculo;
 
    public OracleSimpleClient(String host, int port)
       {
-      this.host = host;
-      this.port = port;
+      this.oraculo = new OraculoService(host, port);
       }
 
    public static void main(String[] args)
@@ -82,31 +71,23 @@ public final class OracleSimpleClient
          }
       }
 
-   private List<ExchangeRate> getValues(LocalDate since, LocalDate to) throws Exception
+   private List<Cotacao> getValues(LocalDate since, LocalDate to)
       {
-      final NetworkRequest  request  = new NetworkRequest(GROUP_NAME, GROUP_PASSWORD, since, to);
-      final NetworkResponse response = sendRequest(request);
-
-      if (response.errorMessage != null)
-         {
-         throw new RuntimeException(response.errorMessage);
-         }
-
-      return (response.getExchangeRates());
+      return oraculo.obterCotacoes(since, to);
       }
 
-   private void go(LocalDate firstDate, LocalDate lastDate) throws Exception
+   private void go(LocalDate firstDate, LocalDate lastDate)
       {
       printList(getValues(firstDate, lastDate));
       }
 
-   private void printList(List<ExchangeRate> records)
+   private void printList(List<Cotacao> records)
       {
       if (!records.isEmpty())
          {
-         for (final ExchangeRate record : records)
+         for (final Cotacao record : records)
             {
-            System.out.printf("%s, %.2f\n", record.getDate(), record.getValue());
+            System.out.printf("%s, %.2f\n", record.getData(), record.getValor());
             }
          }
       else
@@ -115,13 +96,4 @@ public final class OracleSimpleClient
          }
       }
 
-   private NetworkResponse sendRequest(NetworkRequest request) throws Exception
-      {
-      try (Socket socket = new Socket(host, port); ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream()); ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream()))
-         {
-         outputStream.writeObject(request);
-         outputStream.flush();
-         return ((NetworkResponse) inputStream.readObject());
-         }
-      }
    }

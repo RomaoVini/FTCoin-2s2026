@@ -1,4 +1,3 @@
-
 package br.ftcoin.model;
 
 import org.junit.jupiter.api.Test;

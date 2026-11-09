@@ -1,0 +1,26 @@
+# Maven build output
+/target/
+
+# Java compiler output
+*.class
+
+# IDE metadata
+.classpath
+.project
+.settings/
+.idea/
+*.iml
+
+# VS Code workspace state
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+
+# Operating system files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
