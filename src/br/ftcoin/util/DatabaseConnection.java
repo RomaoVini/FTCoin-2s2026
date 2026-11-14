@@ -11,13 +11,13 @@ import java.sql.SQLException;
 public final class DatabaseConnection {
 
     private static final String URL =
-            "jdbc:mariadb://SEU_HOST:3306/SEU_BANCO";
+           "jdbc:mariadb://143.106.243.64:3306/POO2_2s26_A02?useUnicode=true&characterEncoding=utf8&connectionCollation=utf8mb4_unicode_ci";
 
     private static final String USUARIO =
-            System.getenv("FTCOIN_DB_USER");
+            System.getenv("POO2_2s26_A02");
 
     private static final String SENHA =
-            System.getenv("FTCOIN_DB_PASSWORD");
+            System.getenv("W90OL8wsC8");
 
     private static DatabaseConnection instancia;
     private Connection conexao;
