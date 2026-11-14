@@ -1,21 +1,15 @@
 
 package br.ftcoin.dao.mariadb;
-
-import br.unicamp.ft.ftcoin.dao.*;
+import br.ftcoin.dao.*;
 
 public class MariaDBDAOFactory extends DAOFactory {
     @Override
     public CarteiraDAO getCarteiraDAO() {
-        return new CarteiraDAOMariaDB();
+        return new CarteiraDAOMariaDB(); //ta faltando a carteiradao
     }
 
     @Override
     public MovimentacaoDAO getMovimentacaoDAO() {
         return new MovimentacaoDAOMariaDB();
-    }
-
-    @Override
-    public OraculoDAO getOraculoDAO() {
-        return new OraculoDAOMariaDB();
     }
 }

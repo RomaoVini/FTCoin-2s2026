@@ -1,6 +1,6 @@
 package br.ftcoin.dao.memory;
 
-import br.unicamp.ft.ftcoin.dao.*;
+import br.ftcoin.dao.*;
 
 public class MemoriaDAOFactory extends DAOFactory {
     @Override
@@ -11,10 +11,5 @@ public class MemoriaDAOFactory extends DAOFactory {
     @Override
     public MovimentacaoDAO getMovimentacaoDAO() {
         return new MovimentacaoDAOMemoria();
-    }
-
-    @Override
-    public OraculoDAO getOraculoDAO() {
-        return new OraculoDAOMemoria();
     }
 }
