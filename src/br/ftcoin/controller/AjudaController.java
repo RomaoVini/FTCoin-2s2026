@@ -1,6 +1,7 @@
 package br.ftcoin.controller;
 
 import br.ftcoin.util.I18n;
+import br.ftcoin.view.AjudaView;
 import br.ftcoin.view.ConsoleUtils;
 
 import java.util.Objects;
@@ -14,39 +15,25 @@ import java.util.Objects;
  */
 public class AjudaController {
 
-    private final ConsoleUtils consoleUtils;
+    private final AjudaView view;
 
     /**
-     * Constrói o controlador de ajuda injetando o utilitário de console.
+     * Constrói o controlador de ajuda injetando o utilitário de console
+     * e instanciando sua respectiva camada de visualização ({@link AjudaView}).
      *
      * @param consoleUtils Instância centralizada para interação e formatação na CLI.
      * @throws NullPointerException se {@code consoleUtils} for nulo.
      */
     public AjudaController(ConsoleUtils consoleUtils) {
-        this.consoleUtils = Objects.requireNonNull(consoleUtils, "ConsoleUtils não pode ser nulo.");
+        ConsoleUtils console = Objects.requireNonNull(consoleUtils, () -> I18n.get("generic.error.nullParameter"));
+        this.view = new AjudaView(console);
     }
 
     /**
-     * Renderiza na interface de linha de comando (CLI) o manual resumido de
-     * operações (Carteira, Movimentação e Relatórios), dicas de uso e os
-     * créditos do projeto no idioma ativo, aguardando confirmação para retornar.
+     * Aciona a camada de visualização para exibir as instruções de uso
+     * e os créditos do sistema no idioma ativo.
      */
     public void exibirMenuAjuda() {
-        System.out.println();
-        System.out.println(ConsoleUtils.NEGRITO + ConsoleUtils.AZUL + I18n.get("help.instructions.header") + ConsoleUtils.RESET);
-        System.out.println(ConsoleUtils.NEGRITO + I18n.get("help.instructions.title") + ConsoleUtils.RESET);
-        System.out.println("  • " + I18n.get("help.instructions.wallet"));
-        System.out.println("  • " + I18n.get("help.instructions.transaction"));
-        System.out.println("  • " + I18n.get("help.instructions.reports"));
-        System.out.println();
-        System.out.println(ConsoleUtils.AMARELO + I18n.get("help.instructions.tip") + ConsoleUtils.RESET);
-        System.out.println();
-        
-        System.out.println(ConsoleUtils.NEGRITO + ConsoleUtils.AZUL + I18n.get("help.credits.header") + ConsoleUtils.RESET);
-        System.out.println("  " + I18n.get("help.credits.team"));
-        System.out.println("  " + I18n.get("help.credits.version"));
-        System.out.println();
-
-        consoleUtils.pausar();
+        view.exibirAjudaECreditos();
     }
 }

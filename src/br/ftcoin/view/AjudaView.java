@@ -1,82 +1,50 @@
-
 package br.ftcoin.view;
 
 import br.ftcoin.util.I18n;
 
-import java.util.List;
 import java.util.Objects;
 
 /**
- * Interface de linha de comando (CLI) responsável pela exibição do submenu de Ajuda
- * e das informações institucionais/técnicas sobre o sistema FT_Coin.
- *
- * <p>Atua estritamente na camada de apresentação, utilizando {@link MenuView},
- * {@link ConsoleUtils} e {@link I18n} para internacionalização dinâmica.</p>
+ * Interface de linha de comando (CLI) responsável por renderizar as instruções
+ * de uso e os créditos da equipe do sistema FT_Coin.
  *
  * @author Equipe FT_Coin
  * @version 2.0
  */
 public class AjudaView {
 
-    private static final List<String> OPCOES = List.of(
-            "helpMenu.help",
-            "helpMenu.about"
-    );
-
-    private final ConsoleUtils console;
-    private final MenuView menu;
+    private final ConsoleUtils consoleUtils;
 
     /**
-     * Constrói a view de ajuda reutilizando o utilitário de console centralizado.
+     * Constrói a view de ajuda injetando o utilitário de console.
      *
-     * @param console Utilitário centralizado para entrada/saída na CLI.
-     * @throws NullPointerException se {@code console} for nulo.
+     * @param consoleUtils Instância centralizada para interação e formatação na CLI.
+     * @throws NullPointerException se {@code consoleUtils} for nulo.
      */
-    public AjudaView(ConsoleUtils console) {
-        this.console = Objects.requireNonNull(console, () -> I18n.get("generic.error.nullParameter"));
-        this.menu = new MenuView(this.console);
+    public AjudaView(ConsoleUtils consoleUtils) {
+        this.consoleUtils = Objects.requireNonNull(consoleUtils, () -> I18n.get("generic.error.nullParameter"));
     }
 
     /**
-     * Exibe o loop interativo do submenu de Ajuda e apresenta os textos explicativos
-     * de uso do sistema ou as informações da equipe/versão.
+     * Renderiza o manual resumido de operações (Carteira, Movimentação e Relatórios),
+     * dicas de uso e os créditos do projeto no idioma ativo, aguardando confirmação para retornar.
      */
-    public void exibirMenu() {
-        int opcao;
-        do {
-            opcao = menu.exibirEObterOpcao("helpMenu.title", OPCOES);
-
-            switch (opcao) {
-                case 1 -> exibirAjuda();
-                case 2 -> exibirSobre();
-                default -> { /* 0 = voltar */ }
-            }
-
-            if (opcao != 0) {
-                console.pausar();
-            }
-        } while (opcao != 0);
-    }
-
-    /**
-     * Renderiza o guia rápido de utilização dos módulos do sistema FT_Coin.
-     */
-    public void exibirAjuda() {
+    public void exibirAjudaECreditos() {
         System.out.println();
-        System.out.println(ConsoleUtils.NEGRITO + ConsoleUtils.AZUL
-                + I18n.get("helpView.help.header") + ConsoleUtils.RESET);
-        System.out.println(I18n.get("helpView.help.body"));
+        System.out.println(ConsoleUtils.NEGRITO + ConsoleUtils.AZUL + I18n.get("help.instructions.header") + ConsoleUtils.RESET);
+        System.out.println(ConsoleUtils.NEGRITO + I18n.get("help.instructions.title") + ConsoleUtils.RESET);
+        System.out.println("  • " + I18n.get("help.instructions.wallet"));
+        System.out.println("  • " + I18n.get("help.instructions.transaction"));
+        System.out.println("  • " + I18n.get("help.instructions.reports"));
         System.out.println();
-    }
+        System.out.println(ConsoleUtils.AMARELO + I18n.get("help.instructions.tip") + ConsoleUtils.RESET);
+        System.out.println();
 
-    /**
-     * Renderiza as informações sobre a versão, disciplina, propósito e equipe desenvolvedora.
-     */
-    public void exibirSobre() {
+        System.out.println(ConsoleUtils.NEGRITO + ConsoleUtils.AZUL + I18n.get("help.credits.header") + ConsoleUtils.RESET);
+        System.out.println("  " + I18n.get("help.credits.team"));
+        System.out.println("  " + I18n.get("help.credits.version"));
         System.out.println();
-        System.out.println(ConsoleUtils.NEGRITO + ConsoleUtils.AZUL
-                + I18n.get("helpView.about.header") + ConsoleUtils.RESET);
-        System.out.println(I18n.get("helpView.about.body"));
-        System.out.println();
+
+        consoleUtils.pausar();
     }
 }
