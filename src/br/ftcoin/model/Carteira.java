@@ -1,99 +1,123 @@
-
 package br.ftcoin.model;
 
+import br.ftcoin.exception.ValidacaoException;
+
+import java.util.Objects;
+
 /**
- * Representa uma carteira de criptomoedas do sistema FT Coin.
+ * Entidade de domínio que representa uma carteira de moedas virtuais no sistema FT_Coin.
+ * Garante a integridade de seus atributos desde a instanciação através de validações
+ * internacionalizadas ({@link ValidacaoException}).
  *
- * Cada carteira possui um identificador, um titular e uma corretora.
+ * @author Equipe FT_Coin
+ * @version 2.0
  */
 public class Carteira {
 
-    private int id;
+    private final int id;
     private String titular;
     private String corretora;
 
     /**
-     * Cria uma carteira com identificador, titular e corretora.
+     * Constrói uma nova instância válida de {@link Carteira}.
      *
-     * @param id identificador da carteira
-     * @param titular nome do titular da carteira
-     * @param corretora nome da corretora utilizada
+     * @param id        Identificador numérico único da carteira (deve ser maior que zero).
+     * @param titular   Nome completo do proprietário da carteira.
+     * @param corretora Nome da corretora custodiante.
+     * @throws ValidacaoException se o {@code id} for menor ou igual a zero, ou se {@code titular}/{@code corretora} forem nulos ou vazios.
      */
     public Carteira(int id, String titular, String corretora) {
-        setId(id);
+        if (id <= 0) {
+            throw new ValidacaoException("wallet.error.invalidId", String.valueOf(id));
+        }
+        this.id = id;
         setTitular(titular);
         setCorretora(corretora);
     }
 
     /**
-     * Retorna o identificador da carteira.
+     * Retorna o identificador único da carteira.
      *
-     * @return identificador da carteira
+     * @return Identificador numérico da carteira.
      */
     public int getId() {
         return id;
     }
 
     /**
-     * Define o identificador da carteira.
+     * Retorna o nome do titular da carteira.
      *
-     * @param id identificador da carteira
-     */
-    public void setId(int id) {
-        if (id <= 0) {
-            throw new IllegalArgumentException(
-                "O identificador deve ser positivo."
-            );
-        }
-
-        this.id = id;
-    }
-
-    /**
-     * Retorna o titular da carteira.
-     *
-     * @return nome do titular
+     * @return Nome do titular.
      */
     public String getTitular() {
         return titular;
     }
 
     /**
-     * Define o titular da carteira.
+     * Define o nome do titular da carteira após validar e remover espaços excedentes.
      *
-     * @param titular nome do titular
+     * @param titular Nome do titular.
+     * @throws ValidacaoException se o {@code titular} for nulo ou composto apenas por espaços em branco.
      */
     public void setTitular(String titular) {
         if (titular == null || titular.isBlank()) {
-            throw new IllegalArgumentException(
-                "O nome do titular é obrigatório."
-            );
+            throw new ValidacaoException("wallet.error.holderRequired");
         }
-
-        this.titular = titular;
+        this.titular = titular.trim();
     }
 
     /**
-     * Retorna a corretora da carteira.
+     * Retorna o nome da corretora vinculada à carteira.
      *
-     * @return nome da corretora
+     * @return Nome da corretora.
      */
     public String getCorretora() {
         return corretora;
     }
 
     /**
-     * Define a corretora da carteira.
+     * Define o nome da corretora após validar e remover espaços excedentes.
      *
-     * @param corretora nome da corretora
+     * @param corretora Nome da corretora.
+     * @throws ValidacaoException se a {@code corretora} for nula ou composta apenas por espaços em branco.
      */
     public void setCorretora(String corretora) {
         if (corretora == null || corretora.isBlank()) {
-            throw new IllegalArgumentException(
-                "O nome da corretora é obrigatório."
-            );
+            throw new ValidacaoException("wallet.error.brokerRequired");
         }
+        this.corretora = corretora.trim();
+    }
 
-        this.corretora = corretora;
+    /**
+     * Compara duas carteiras com base exclusivamente em seu identificador único ({@code id}).
+     *
+     * @param o Objeto a ser comparado.
+     * @return {@code true} se ambos representarem a carteira com o mesmo {@code id}.
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Carteira carteira)) return false;
+        return id == carteira.id;
+    }
+
+    /**
+     * Gera o código hash baseado no identificador único da carteira.
+     *
+     * @return Código hash do {@code id}.
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+
+    /**
+     * Retorna uma representação textual estruturada da carteira.
+     *
+     * @return String formatada com ID, titular e corretora.
+     */
+    @Override
+    public String toString() {
+        return String.format("Carteira{id=%d, titular='%s', corretora='%s'}", id, titular, corretora);
     }
 }
