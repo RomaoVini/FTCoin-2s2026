@@ -4,6 +4,7 @@ import br.ftcoin.dao.CarteiraDAO;
 import br.ftcoin.dao.MovimentacaoDAO;
 import br.ftcoin.enums.TipoOperacao;
 import br.ftcoin.exception.ValidacaoException;
+import br.ftcoin.model.CarteiraFinanceira;
 import br.ftcoin.model.Cotacao;
 import br.ftcoin.model.Movimentacao;
 import br.ftcoin.service.OraculoCotacao;
@@ -158,14 +159,12 @@ public class MovimentacaoController {
     private void validarSaldoParaVenda(int idCarteira, BigDecimal quantidadeVenda) {
         BigDecimal saldoAtual = calcularSaldoMoedas(idCarteira);
         if (saldoAtual.compareTo(quantidadeVenda) < 0) {
-            throw new ValidacaoException("transaction.sell.error.insufficientBalance", saldoAtual.toPlainString());
+            throw new ValidacaoException("transaction.sell.insufficientBalance");
         }
     }
 
     private BigDecimal calcularSaldoMoedas(int idCarteira) {
-        return movimentacaoDAO.consultarPorCarteira(idCarteira).stream()
-                .map(m -> m.isCompra() ? m.getQuantidade() : m.getQuantidade().negate())
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        return CarteiraFinanceira.calcularSaldoQuantidade(movimentacaoDAO.consultarPorCarteira(idCarteira));
     }
 
     private void processarOperacaoCLI(TipoOperacao tipo) {
