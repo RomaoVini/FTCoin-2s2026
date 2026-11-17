@@ -2,6 +2,8 @@ package br.ftcoin.controller;
 
 import br.ftcoin.dao.DAOFactory;
 import br.ftcoin.enums.Idioma;
+import br.ftcoin.service.OraculoCotacao;
+import br.ftcoin.service.OraculoService;
 import br.ftcoin.util.DatabaseConnection;
 import br.ftcoin.util.I18n;
 import br.ftcoin.view.ConsoleUtils;
@@ -47,20 +49,21 @@ public class AppController {
 
         // Obtém a fábrica concreta via Abstract Factory
         DAOFactory daoFactory = DAOFactory.getFactory(this.tipoPersistencia);
+        OraculoCotacao oraculo = new OraculoService();
 
-        // Injeta os DAOs e Views nos respectivos controladores de domínio
+        // Injeta os DAOs, o serviço de cotações e as Views nos controladores de domínio
         this.carteiraController = new CarteiraController(menuView, daoFactory.getCarteiraDAO());
         this.movimentacaoController = new MovimentacaoController(
                 menuView, 
                 daoFactory.getCarteiraDAO(), 
                 daoFactory.getMovimentacaoDAO(), 
-                daoFactory.getOraculoDAO()
+                oraculo
         );
         this.relatorioController = new RelatorioController(
                 menuView, 
                 daoFactory.getCarteiraDAO(), 
                 daoFactory.getMovimentacaoDAO(), 
-                daoFactory.getOraculoDAO()
+                oraculo
         );
         this.ajudaController = new AjudaController(consoleUtils);
 

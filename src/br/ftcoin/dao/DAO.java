@@ -7,8 +7,8 @@ import java.util.Optional;
  * Contrato genérico base para operações fundamentais de persistência (CRUD)
  * seguindo o padrão Data Access Object (DAO).
  *
- * <p>As interfaces específicas de domínio (como {@link CarteiraDAO},
- * {@link MovimentacaoDAO} e {@link OraculoDAO}) estendem este contrato
+ * <p>As interfaces específicas de domínio (como {@link CarteiraDAO}
+ * e {@link MovimentacaoDAO}) estendem este contrato
  * aplicando o recurso de <i>Sealed Interfaces</i> para restringir suas
  * implementações concretas.</p>
  *

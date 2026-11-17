@@ -8,6 +8,8 @@ import java.net.Socket;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import br.ftcoin.dto.ExchangeRate;
 import br.ftcoin.model.Cotacao;
@@ -30,6 +32,7 @@ public final class OraculoService implements OraculoCotacao {
    private final int port;
    private final String groupName;
    private final String groupPassword;
+   private final ConcurrentMap<LocalDate, Cotacao> cache = new ConcurrentHashMap<>();
 
    public OraculoService() {
       this(DEFAULT_HOST, DEFAULT_PORT, GROUP_NAME, GROUP_PASSWORD);
@@ -70,6 +73,10 @@ public final class OraculoService implements OraculoCotacao {
          throw new OraculoException("A data da cotação é obrigatória.");
       }
 
+      return cache.computeIfAbsent(data, this::consultarCotacaoRemota);
+   }
+
+   private Cotacao consultarCotacaoRemota(LocalDate data) {
       List<ExchangeRate> rates = solicitarCotacoes(data, data);
       for (ExchangeRate rate : rates) {
          if (rate != null && data.equals(rate.getDate())) {
@@ -93,10 +100,12 @@ public final class OraculoService implements OraculoCotacao {
 
       List<ExchangeRate> rates = solicitarCotacoes(desde, ate);
       try {
-         return rates.stream()
+         List<Cotacao> cotacoes = rates.stream()
                .filter(Objects::nonNull)
                .map(rate -> new Cotacao(rate.getDate(), rate.getValue()))
                .toList();
+         cotacoes.forEach(cotacao -> cache.putIfAbsent(cotacao.getData(), cotacao));
+         return cotacoes;
       } catch (RuntimeException exception) {
          throw new OraculoException("O servidor retornou cotações inválidas.", exception);
       }

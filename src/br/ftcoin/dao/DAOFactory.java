@@ -37,14 +37,6 @@ public abstract class DAOFactory {
     public abstract MovimentacaoDAO getMovimentacaoDAO();
 
     /**
-     * Cria e retorna a implementação concreta de {@link OraculoDAO}
-     * correspondente à fábrica ativa.
-     *
-     * @return Instância de {@link OraculoDAO}.
-     */
-    public abstract OraculoDAO getOraculoDAO();
-
-    /**
      * Método Factory estático responsável por instanciar a fábrica concreta
      * adequada conforme o parâmetro de configuração informado na inicialização.
      *

@@ -1,7 +1,5 @@
 package br.ftcoin.dao;
 
-import br.ftcoin.dao.OraculoDAO;
-
 /**
  * Implementação concreta do padrão Abstract Factory ({@link DAOFactory})
  * responsável por instanciar a família de DAOs voltada à persistência
@@ -32,13 +30,4 @@ public class MariaDBDAOFactory extends DAOFactory {
         return new MovimentacaoDAOMariaDB();
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return Nova instância de {@link OraculoDAOMariaDB}.
-     */
-    @Override
-    public OraculoDAO getOraculoDAO() {
-        return new OraculoDAOMariaDB();
-    }
 }

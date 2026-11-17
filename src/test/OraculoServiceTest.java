@@ -1,6 +1,7 @@
 package br.ftcoin.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -13,6 +14,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.Test;
 
@@ -31,6 +33,37 @@ class OraculoServiceTest {
 
       assertEquals(data, cotacao.getData());
       assertEquals(new BigDecimal("123.45"), cotacao.getValor());
+   }
+
+   @Test
+   void reutilizaCotacaoDoCacheParaAMesmaData() throws Exception {
+      LocalDate data = LocalDate.of(2026, 11, 9);
+      NetworkResponse resposta = new NetworkResponse(
+            List.of(new ExchangeRate(data, new BigDecimal("123.45"))), null);
+
+      try (ServerSocket servidor = new ServerSocket(0)) {
+         AtomicInteger conexoes = new AtomicInteger();
+         CompletableFuture<Void> respostaEnviada = CompletableFuture.runAsync(() -> {
+            try (Socket socket = servidor.accept();
+                  ObjectOutputStream saida = new ObjectOutputStream(socket.getOutputStream());
+                  ObjectInputStream entrada = new ObjectInputStream(socket.getInputStream())) {
+               conexoes.incrementAndGet();
+               entrada.readObject();
+               saida.writeObject(resposta);
+               saida.flush();
+            } catch (Exception exception) {
+               throw new IllegalStateException(exception);
+            }
+         });
+
+         OraculoService oraculo = new OraculoService("127.0.0.1", servidor.getLocalPort(), "grupo", "senha");
+         Cotacao primeiraConsulta = oraculo.obterCotacao(data);
+         Cotacao consultaDoCache = oraculo.obterCotacao(data);
+         respostaEnviada.get(2, TimeUnit.SECONDS);
+
+         assertSame(primeiraConsulta, consultaDoCache);
+         assertEquals(1, conexoes.get());
+      }
    }
 
    @Test

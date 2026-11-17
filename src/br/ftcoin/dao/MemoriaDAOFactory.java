@@ -1,10 +1,5 @@
 package br.ftcoin.dao;
 
-import br.ftcoin.dao.CarteiraDAO;
-import br.ftcoin.dao.DAOFactory;
-import br.ftcoin.dao.MovimentacaoDAO;
-import br.ftcoin.dao.OraculoDAO;
-
 /**
  * Fábrica concreta do padrão <b>Abstract Factory</b> responsável por instanciar
  * a família de DAOs com persistência volátil em memória local.
@@ -33,8 +28,4 @@ public class MemoriaDAOFactory extends DAOFactory {
     /**
      * {@inheritDoc}
      */
-    @Override
-    public OraculoDAO getOraculoDAO() {
-        return new OraculoDAOMemoria();
-    }
 }

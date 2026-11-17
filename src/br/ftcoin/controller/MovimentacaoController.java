@@ -2,16 +2,12 @@ package br.ftcoin.controller;
 
 import br.ftcoin.dao.CarteiraDAO;
 import br.ftcoin.dao.MovimentacaoDAO;
-import br.ftcoin.dao.OraculoDAO;
 import br.ftcoin.enums.TipoOperacao;
+import br.ftcoin.exception.ValidacaoException;
 import br.ftcoin.model.Cotacao;
 import br.ftcoin.model.Movimentacao;
-import br.ftcoin.exception.ValidacaoException;
 import br.ftcoin.service.OraculoCotacao;
-import br.ftcoin.service.OraculoService;
-import br.ftcoin.exception.ValidacaoException;
-import br.ftcoin.model.Cotacao;
-import br.ftcoin.model.Movimentacao;
+import br.ftcoin.service.OraculoException;
 import br.ftcoin.util.I18n;
 import br.ftcoin.view.ConsoleUtils;
 import br.ftcoin.view.MenuView;
@@ -23,7 +19,7 @@ import java.util.Objects;
 
 /**
  * Controlador responsável por gerenciar as operações financeiras de {@link Movimentacao}
- * (Compra e Venda de moedas virtuais) e a consulta de cotações junto ao {@link OraculoDAO}.
+ * (Compra e Venda de moedas virtuais) e a consulta de cotações junto ao {@link OraculoCotacao}.
  * Garante a integridade referencial das carteiras e a validação de saldo em vendas.
  *
  * @author Equipe FT_Coin
@@ -33,7 +29,7 @@ public class MovimentacaoController {
 
     private final MovimentacaoDAO movimentacaoDAO;
     private final CarteiraDAO carteiraDAO;
-    private final OraculoDAO oraculoDAO;
+    private final OraculoCotacao oraculo;
     private MenuView menuView;
     private ConsoleUtils consoleUtils;
 
@@ -43,13 +39,13 @@ public class MovimentacaoController {
      *
      * @param carteiraDAO     DAO para validação da existência de carteiras.
      * @param movimentacaoDAO DAO para persistência das movimentações.
-     * @param oraculoDAO      DAO para consulta da cotação diária da moeda.
-     * @throws NullPointerException se qualquer um dos DAOs for nulo.
+     * @param oraculo         Serviço para consulta da cotação diária da moeda.
+     * @throws NullPointerException se qualquer dependência for nula.
      */
-    public MovimentacaoController(CarteiraDAO carteiraDAO, MovimentacaoDAO movimentacaoDAO, OraculoDAO oraculoDAO) {
+    public MovimentacaoController(CarteiraDAO carteiraDAO, MovimentacaoDAO movimentacaoDAO, OraculoCotacao oraculo) {
         this.carteiraDAO = Objects.requireNonNull(carteiraDAO, "CarteiraDAO não pode ser nulo.");
         this.movimentacaoDAO = Objects.requireNonNull(movimentacaoDAO, "MovimentacaoDAO não pode ser nulo.");
-        this.oraculoDAO = Objects.requireNonNull(oraculoDAO, "OraculoDAO não pode ser nulo.");
+        this.oraculo = Objects.requireNonNull(oraculo, "Serviço de cotações não pode ser nulo.");
     }
 
     /**
@@ -58,11 +54,11 @@ public class MovimentacaoController {
      * @param menuView        View genérica de menus da aplicação.
      * @param carteiraDAO     DAO de carteiras.
      * @param movimentacaoDAO DAO de movimentações.
-     * @param oraculoDAO      DAO do oráculo de cotações.
-     * @throws NullPointerException se {@code menuView} ou algum DAO for nulo.
+     * @param oraculo         Serviço do oráculo de cotações.
+     * @throws NullPointerException se qualquer dependência for nula.
      */
-    public MovimentacaoController(MenuView menuView, CarteiraDAO carteiraDAO, MovimentacaoDAO movimentacaoDAO, OraculoDAO oraculoDAO) {
-        this(carteiraDAO, movimentacaoDAO, oraculoDAO);
+    public MovimentacaoController(MenuView menuView, CarteiraDAO carteiraDAO, MovimentacaoDAO movimentacaoDAO, OraculoCotacao oraculo) {
+        this(carteiraDAO, movimentacaoDAO, oraculo);
         this.menuView = Objects.requireNonNull(menuView, "MenuView não pode ser nula.");
         this.consoleUtils = menuView.getConsoleUtils();
     }
@@ -125,16 +121,15 @@ public class MovimentacaoController {
     }
 
     /**
-     * Consulta a cotação da moeda virtual para a data especificada junto ao Oráculo.
+     * Consulta a cotação da moeda virtual para a data especificada junto ao oráculo.
      *
      * @param data Data de referência para consulta.
      * @return A {@link Cotacao} correspondente à data.
-     * @throws ValidacaoException se não houver cotação disponível para a data informada.
+     * @throws OraculoException se não houver cotação ou se a consulta ao oráculo falhar.
      */
     public Cotacao consultarCotacao(LocalDate data) {
         Objects.requireNonNull(data, "A data para consulta de cotação não pode ser nula.");
-        return oraculoDAO.consultar(data)
-                .orElseThrow(() -> new ValidacaoException("report.oracle.error.notFound", data.toString()));
+        return oraculo.obterCotacao(data);
     }
 
     /**
@@ -199,7 +194,7 @@ public class MovimentacaoController {
             System.out.println(I18n.get("report.oracle.display.date") + " " + cotacao.getData());
             System.out.println(I18n.get("report.oracle.display.price") + " R$ " + cotacao.getValor());
             consoleUtils.pausar();
-        } catch (ValidacaoException e) {
+        } catch (OraculoException e) {
             consoleUtils.exibirAlerta(e.getMessage());
             consoleUtils.pausar();
         }
