@@ -17,6 +17,12 @@ import br.ftcoin.model.Movimentacao;
 public final class CalculoFinanceiroService {
    private final OraculoCotacao oraculo;
 
+   /**
+    * Cria o serviço usando a fonte de cotações informada.
+    *
+    * @param oraculo fonte de cotações necessária aos cálculos
+    * @throws NullPointerException se o oráculo for nulo
+    */
    public CalculoFinanceiroService(OraculoCotacao oraculo) {
       this.oraculo = Objects.requireNonNull(oraculo, "Oráculo de cotações obrigatório");
    }

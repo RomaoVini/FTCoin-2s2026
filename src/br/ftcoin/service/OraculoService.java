@@ -34,14 +34,33 @@ public final class OraculoService implements OraculoCotacao {
    private final String groupPassword;
    private final ConcurrentMap<LocalDate, Cotacao> cache = new ConcurrentHashMap<>();
 
+   /**
+    * Cria o serviço usando o endereço padrão do servidor e as credenciais do projeto.
+    */
    public OraculoService() {
       this(DEFAULT_HOST, DEFAULT_PORT, GROUP_NAME, GROUP_PASSWORD);
    }
 
+   /**
+    * Cria o serviço para um servidor específico, usando as credenciais do projeto.
+    *
+    * @param host endereço do servidor
+    * @param port porta do servidor
+    * @throws IllegalArgumentException se o endereço ou a porta forem inválidos
+    */
    public OraculoService(String host, int port) {
       this(host, port, GROUP_NAME, GROUP_PASSWORD);
    }
 
+   /**
+    * Cria o serviço para o servidor e as credenciais informados.
+    *
+    * @param host endereço do servidor
+    * @param port porta do servidor
+    * @param groupName nome do grupo cliente
+    * @param groupPassword credencial do grupo cliente
+    * @throws IllegalArgumentException se algum parâmetro for inválido
+    */
    public OraculoService(String host, int port, String groupName, String groupPassword) {
       if (host == null || host.isBlank()) {
          throw new IllegalArgumentException("Host do oráculo obrigatório");
@@ -91,7 +110,12 @@ public final class OraculoService implements OraculoCotacao {
    }
 
    /**
-    * Consulta um intervalo para clientes de diagnóstico que exibem históricos.
+    * Consulta e converte as cotações de um intervalo de datas.
+    *
+    * @param desde primeiro dia do intervalo
+    * @param ate último dia do intervalo
+    * @return cotações recebidas para o intervalo
+    * @throws OraculoException se o intervalo for inválido ou a consulta falhar
     */
    public List<Cotacao> obterCotacoes(LocalDate desde, LocalDate ate) {
       if (desde == null || ate == null || desde.isAfter(ate)) {

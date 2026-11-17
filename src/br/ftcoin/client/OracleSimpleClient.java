@@ -28,15 +28,29 @@ import java.util.List;
 import br.ftcoin.model.Cotacao;
 import br.ftcoin.service.OraculoService;
 
+/**
+ * Cliente de linha de comando que demonstra a consulta de um histórico de cotações.
+ */
 public final class OracleSimpleClient
    {
    private final OraculoService oraculo;
 
+   /**
+    * Cria o cliente configurado para consultar o servidor informado.
+    *
+    * @param host endereço do servidor de cotações
+    * @param port porta do servidor de cotações
+    */
    public OracleSimpleClient(String host, int port)
       {
       this.oraculo = new OraculoService(host, port);
       }
 
+   /**
+    * Executa o cliente para consultar e exibir as cotações dos últimos sete dias.
+    *
+    * @param args argumentos opcionais: endereço e porta do servidor
+    */
    public static void main(String[] args)
       {
       // data range to be requested

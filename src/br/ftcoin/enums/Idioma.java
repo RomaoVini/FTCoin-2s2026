@@ -35,18 +35,38 @@ public enum Idioma {
         this.locale = Locale.of(codigo, pais);
     }
 
+    /**
+     * Retorna o código ISO 639 do idioma.
+     *
+     * @return código do idioma
+     */
     public String getCodigo() {
         return codigo;
     }
 
+    /**
+     * Retorna o código ISO 3166 do país associado ao idioma.
+     *
+     * @return código do país
+     */
     public String getPais() {
         return pais;
     }
 
+    /**
+     * Retorna o nome legível do idioma e da região.
+     *
+     * @return descrição do idioma
+     */
     public String getDescricao() {
         return descricao;
     }
 
+    /**
+     * Retorna a localidade usada para carregar traduções e formatar valores.
+     *
+     * @return localidade do idioma
+     */
     public Locale getLocale() {
         return locale;
     }

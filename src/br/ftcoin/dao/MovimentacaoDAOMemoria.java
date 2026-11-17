@@ -9,12 +9,22 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 
-//com persistência de memória os dados existem apenas enquanto a aplicação está rodando.
+/**
+ * Implementação em memória do repositório de movimentações.
+ *
+ * <p>Os dados ficam disponíveis somente enquanto a instância existir; novos
+ * identificadores são atribuídos automaticamente quando necessário.</p>
+ */
 public final class MovimentacaoDAOMemoria implements MovimentacaoDAO {
-    //o TreeMap mantém as movimentações ordenadas pelo identificador
     private final Map<Integer, Movimentacao> armazenamento = new TreeMap<>();
     private int proximoId = 1;
 
+    /**
+     * Armazena uma movimentação e atribui um identificador se ela ainda não tiver um.
+     *
+     * @param movimentacao movimentação a incluir
+     * @throws ValidacaoException se a movimentação for nula ou o identificador já existir
+     */
     @Override
     public void incluir(Movimentacao movimentacao){
         if(movimentacao == null){
@@ -33,16 +43,34 @@ public final class MovimentacaoDAOMemoria implements MovimentacaoDAO {
         proximoId = Math.max(proximoId, id + 1);
     }
 
+    /**
+     * Busca uma movimentação pelo identificador.
+     *
+     * @param id identificador da movimentação
+     * @return movimentação encontrada, ou {@link Optional#empty()} se não existir
+     */
     @Override
     public Optional<Movimentacao> consultar(Integer id) {
         return Optional.ofNullable(armazenamento.get(id));
     }
 
+    /**
+     * Retorna todas as movimentações armazenadas em uma nova lista.
+     *
+     * @return cópia da lista de movimentações
+     */
     @Override
     public List<Movimentacao> consultarTodos(){
         return new ArrayList<>(armazenamento.values());//devolve uma cópia da lista, para não permitir alterações externas
     }
 
+    /**
+     * Busca as movimentações de uma carteira em ordem cronológica e, em caso de
+     * empate na data, por identificador crescente.
+     *
+     * @param idCarteira identificador da carteira
+     * @return movimentações associadas à carteira
+     */
     @Override
     public List<Movimentacao> consultarPorCarteira(int idCarteira) {
         List<Movimentacao> resultado = new ArrayList<>();
@@ -55,6 +83,12 @@ public final class MovimentacaoDAOMemoria implements MovimentacaoDAO {
         return resultado;
     }
 
+    /**
+     * Substitui uma movimentação existente pelo mesmo identificador.
+     *
+     * @param movimentacao movimentação com os dados atualizados
+     * @throws ValidacaoException se a movimentação for nula ou não estiver cadastrada
+     */
     @Override
     public void editar(Movimentacao movimentacao) {
         if (movimentacao == null) {
@@ -67,6 +101,12 @@ public final class MovimentacaoDAOMemoria implements MovimentacaoDAO {
         armazenamento.put(id, movimentacao);
     }
 
+    /**
+     * Remove a movimentação identificada.
+     *
+     * @param id identificador da movimentação
+     * @throws ValidacaoException se não houver movimentação com esse identificador
+     */
     @Override
     public void excluir(Integer id) {
         if (armazenamento.remove(id) == null) {

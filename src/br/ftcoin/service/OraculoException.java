@@ -6,10 +6,21 @@ package br.ftcoin.service;
 public class OraculoException extends RuntimeException {
    private static final long serialVersionUID = 1L;
 
+   /**
+    * Cria uma exceção para uma falha ao consultar ou interpretar uma cotação.
+    *
+    * @param message descrição da falha
+    */
    public OraculoException(String message) {
       super(message);
    }
 
+   /**
+    * Cria uma exceção para uma falha ao consultar ou interpretar uma cotação.
+    *
+    * @param message descrição da falha
+    * @param cause causa original da falha
+    */
    public OraculoException(String message, Throwable cause) {
       super(message, cause);
    }

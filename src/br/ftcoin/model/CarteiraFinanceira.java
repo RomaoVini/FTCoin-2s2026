@@ -25,6 +25,8 @@ public final class CarteiraFinanceira {
     /**
      * Atualiza as métricas para uma movimentação e sua cotação histórica.
      *
+     * @param movimentacao movimentação a registrar
+     * @param cotacao cotação válida na data da movimentação
      * @return o resultado operacional da movimentação (zero para compras)
      */
     public BigDecimal registrarMovimentacao(Movimentacao movimentacao, Cotacao cotacao) {
@@ -53,6 +55,10 @@ public final class CarteiraFinanceira {
 
     /**
      * Calcula o saldo de uma sequência de movimentações em ordem cronológica.
+     *
+     * @param movimentacoes histórico de movimentações
+     * @return saldo de moedas após aplicar todas as operações
+     * @throws ValidacaoException se uma venda exceder o saldo disponível
      */
     public static BigDecimal calcularSaldoQuantidade(List<Movimentacao> movimentacoes) {
         Objects.requireNonNull(movimentacoes, "Histórico de movimentações obrigatório");
@@ -81,30 +87,67 @@ public final class CarteiraFinanceira {
         this.cotacaoAtual = Objects.requireNonNull(cotacaoAtual, "Cotação atual obrigatória");
     }
 
+    /**
+     * Retorna a quantidade de moedas atualmente mantida na carteira.
+     *
+     * @return saldo de moedas
+     */
     public BigDecimal getSaldoQuantidade() {
         return saldoQuantidade;
     }
 
+    /**
+     * Retorna o custo médio de aquisição por moeda.
+     *
+     * @return custo médio unitário
+     */
     public BigDecimal getCustoMedio() {
         return custoMedio;
     }
 
+    /**
+     * Retorna o valor financeiro do saldo pelo custo médio de aquisição.
+     *
+     * @return saldo em moeda fiduciária pelo custo médio
+     */
     public BigDecimal getSaldoFinanceiro() {
         return saldoQuantidade.multiply(custoMedio);
     }
 
+    /**
+     * Retorna o valor de mercado do saldo usando a cotação atual.
+     *
+     * @return saldo em moeda fiduciária pela cotação atual
+     * @throws IllegalStateException se a cotação atual ainda não tiver sido definida
+     */
     public BigDecimal getSaldoMercado() {
         return saldoQuantidade.multiply(obterCotacaoAtual().getValor());
     }
 
+    /**
+     * Retorna o resultado operacional da última movimentação registrada.
+     *
+     * @return resultado da última operação (zero para compras)
+     */
     public BigDecimal getResultadoOperacional() {
         return resultadoOperacional;
     }
 
+    /**
+     * Retorna a soma dos resultados operacionais das vendas registradas.
+     *
+     * @return resultado acumulado das operações
+     */
     public BigDecimal getResultadoAcumulado() {
         return resultadoAcumulado;
     }
 
+    /**
+     * Calcula o resultado total considerando as vendas e o valor de mercado atual.
+     *
+     * @return resultado realizado e não realizado da carteira
+     * @throws IllegalStateException se a cotação atual ainda não tiver sido definida
+     */
     public BigDecimal getResultadoMercado() {
         return totalVendido.add(getSaldoMercado()).subtract(totalComprado);
     }
