@@ -1,15 +1,22 @@
 package br.ftcoin.view;
 
 import br.ftcoin.controller.CarteiraController;
+import br.ftcoin.exception.ValidacaoException;
 import br.ftcoin.model.Carteira;
 import br.ftcoin.util.I18n;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
- * Telas de Carteira (CLI): listar, incluir, editar e excluir.
- * A View só interage com o usuário e exibe resultados; toda a validação
- * e as regras ficam no CarteiraController.
+ * Interface de linha de comando (CLI) responsável pelas telas de interação
+ * do módulo de Carteiras (cadastro, listagem, edição e exclusão).
+ *
+ * <p>Atua estritamente na camada de apresentação, delegando todas as validações
+ * e regras de negócio ao {@link CarteiraController}.</p>
+ *
+ * @author Equipe FT_Coin
+ * @version 2.0
  */
 public class CarteiraView {
 
@@ -17,18 +24,30 @@ public class CarteiraView {
             "walletView.option.register",
             "walletView.option.list",
             "walletView.option.edit",
-            "walletView.option.delete");
+            "walletView.option.delete"
+    );
 
     private final CarteiraController controller;
     private final ConsoleUtils console;
     private final MenuView menu;
 
+    /**
+     * Constrói a view de carteiras injetando o utilitário de console e o controlador responsável.
+     *
+     * @param console    Utilitário centralizado para entrada/saída na CLI.
+     * @param controller Controlador de regras de negócio de {@link Carteira}.
+     * @throws NullPointerException se {@code console} ou {@code controller} forem nulos.
+     */
     public CarteiraView(ConsoleUtils console, CarteiraController controller) {
-        this.console = console;
-        this.menu = new MenuView(console);
-        this.controller = controller;
+        this.console = Objects.requireNonNull(console, () -> I18n.get("generic.error.nullParameter"));
+        this.controller = Objects.requireNonNull(controller, () -> I18n.get("generic.error.nullParameter"));
+        this.menu = new MenuView(this.console);
     }
 
+    /**
+     * Exibe o loop interativo do submenu de Carteiras e direciona cada opção
+     * escolhida pelo usuário para o fluxo correspondente.
+     */
     public void exibirMenu() {
         int opcao;
         do {
@@ -42,8 +61,9 @@ public class CarteiraView {
                     case 4 -> excluir();
                     default -> { /* 0 = voltar */ }
                 }
+            } catch (ValidacaoException e) {
+                console.exibirErro(e.getMessage());
             } catch (RuntimeException e) {
-                // ValidacaoException já traz a mensagem traduzida pelo I18n.
                 console.exibirErro(e.getMessage());
             }
 
@@ -102,9 +122,12 @@ public class CarteiraView {
     }
 
     private static boolean confirmou(String resposta) {
+        if (resposta == null) {
+            return false;
+        }
         String r = resposta.trim().toLowerCase();
         return r.equals("s") || r.equals("sim") || r.equals("y")
-                || r.equals("yes") || r.equals("si");
+                || r.equals("yes") || r.equals("si") || r.equals("sí");
     }
 
     private static String formatar(Carteira c) {

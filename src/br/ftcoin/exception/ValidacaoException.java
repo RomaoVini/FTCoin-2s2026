@@ -2,26 +2,15 @@ package br.ftcoin.exception;
 
 import br.ftcoin.util.I18n;
 
-//Recebe uma chave do I18n (e parâmetros opcionais), nunca um texto fixo
+/**
+ * Exceção de domínio lançada quando uma regra de negócio ou validação falha.
+ * Resolve automaticamente a mensagem traduzida através da chave do {@link I18n}.
+ */
 public class ValidacaoException extends RuntimeException {
 
-    private final String chave;
-    private final Object[] argumentos;
-
-    public ValidacaoException(String chave, Object... argumentos) {
-        super(chave);
-        this.chave = chave;
-        this.argumentos = argumentos;
-    }
-
-    public String getChave() {
-        return chave;
-    }
-
-    // A tradução acontece aqui, no momento em que a mensagem é lida,
-    // então sempre respeita o idioma ativo no I18n.
-    @Override
-    public String getMessage() {
-        return I18n.getComParametros(chave, argumentos);
+    public ValidacaoException(String chaveI18n, Object... parametros) {
+        super(parametros.length > 0 
+                ? I18n.getComParametros(chaveI18n, parametros) 
+                : I18n.get(chaveI18n));
     }
 }

@@ -7,50 +7,61 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 /**
- * Utilitário responsável pelo gerenciamento de internacionalização (I18n).
- * Controla o ResourceBundle ativo e fornece métodos seguros para recuperar mensagens.
+ * Classe utilitária responsável pelo gerenciamento centralizado de internacionalização (I18n)
+ * do sistema FT_Coin.
+ *
+ * <p>Controla o {@link ResourceBundle} ativo em memória, permite a alternância dinâmica
+ * entre os idiomas suportados ({@link Idioma}) e fornece recuperação segura de mensagens
+ * simples ou parametrizadas.</p>
+ *
+ * @author Equipe FT_Coin
+ * @version 2.0
  */
-public class I18n {
+public final class I18n {
+
     private static final String BUNDLE_NAME = "messages";
     private static ResourceBundle bundle;
     private static Idioma idiomaAtual;
 
     static {
         // Define o idioma padrão do sistema na inicialização
-        setIdioma(Idioma.INGLES);
+        setIdioma(Idioma.PORTUGUES);
     }
 
-    // Construtor privado para impedir instanciação (classe utilitária)
-    private I18n() {}
+    /**
+     * Construtor privado para impedir a instanciação desta classe utilitária.
+     */
+    private I18n() {
+    }
 
     /**
-     * Altera o idioma ativo do sistema e recarrega o arquivo de propriedades correspondente.
-     * 
-     * @param novoIdioma Enum representando o novo idioma
+     * Altera o idioma ativo do sistema e recarrega o arquivo de propriedades
+     * ({@code messages_*.properties}) correspondente.
+     *
+     * @param novoIdioma Enum representando o idioma desejado (se nulo, assume {@link Idioma#PORTUGUES}).
      */
     public static synchronized void setIdioma(Idioma novoIdioma) {
         if (novoIdioma == null) {
-            novoIdioma = Idioma.INGLES;
+            novoIdioma = Idioma.PORTUGUES;
         }
         idiomaAtual = novoIdioma;
         bundle = ResourceBundle.getBundle(BUNDLE_NAME, novoIdioma.getLocale());
     }
 
     /**
-     * Retorna o enum do idioma configurado no momento.
-     * 
-     * @return Idioma ativo
+     * Retorna o enum correspondente ao idioma atualmente ativo na sessão.
+     *
+     * @return Instância de {@link Idioma} ativa.
      */
     public static Idioma getIdiomaAtual() {
         return idiomaAtual;
     }
 
     /**
-     * Obtém a mensagem traduzida associada à chave informada.
-     * Garante a conversão correta de caracteres (UTF-8) e evita erros de execução.
-     * 
-     * @param chave Chave mapeada no arquivo .properties
-     * @return O texto traduzido ou "!chave!" em caso de chave não encontrada
+     * Obtém a mensagem traduzida associada à chave informada no idioma ativo.
+     *
+     * @param chave Chave mapeada no arquivo {@code .properties}.
+     * @return O texto traduzido ou {@code "!chave!"} como fallback caso a chave não exista.
      */
     public static String get(String chave) {
         if (chave == null || chave.isBlank()) {
@@ -60,23 +71,26 @@ public class I18n {
         try {
             return bundle.getString(chave);
         } catch (MissingResourceException e) {
-            // Retorno de fallback amigável em vez de lançar exceção ao usuário
             return "!" + chave + "!";
         }
     }
 
     /**
-     * Obtém uma mensagem traduzida e formata parâmetros dinâmicos.
-     * 
-     * @param chave Chave no .properties
-     * @param argumentos Argumentos para substituir nos placeholders {0}, {1}, etc.
-     * @return Texto formatado com as variáveis inseridas
+     * Obtém uma mensagem traduzida e preenche seus marcadores dinâmicos ({@code {0}}, {@code {1}}, etc.).
+     *
+     * @param chave      Chave mapeada no arquivo {@code .properties}.
+     * @param argumentos Valores que substituirão os placeholders da mensagem.
+     * @return Texto traduzido e formatado com os argumentos fornecidos.
      */
     public static String getComParametros(String chave, Object... argumentos) {
         String mensagem = get(chave);
+        if (argumentos == null || argumentos.length == 0) {
+            return mensagem;
+        }
+
         try {
             return MessageFormat.format(mensagem, argumentos);
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
             return mensagem;
         }
     }

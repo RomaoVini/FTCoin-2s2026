@@ -1,6 +1,5 @@
-package br.ftcoin.dao.memory;
+package br.ftcoin.dao;
 
-import br.ftcoin.dao.MovimentacaoDAO;
 import br.ftcoin.exception.ValidacaoException;
 import br.ftcoin.model.Movimentacao;
 import java.util.ArrayList;
