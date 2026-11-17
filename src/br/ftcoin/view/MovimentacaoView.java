@@ -96,7 +96,7 @@ public class MovimentacaoView {
 
         System.out.println(ConsoleUtils.NEGRITO + I18n.get("report.oracle.display.title") + ConsoleUtils.RESET);
         System.out.println(I18n.get("report.oracle.display.date") + " " + cotacao.getData());
-        System.out.println(I18n.get("report.oracle.display.price") + " R$ " + cotacao.getValorCotacao());
+        System.out.println(I18n.get("report.oracle.display.price") + " R$ " + cotacao.getValor());
     }
 
     private BigDecimal lerDecimal(String prompt) {
