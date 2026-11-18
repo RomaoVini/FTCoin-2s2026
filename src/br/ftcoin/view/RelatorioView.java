@@ -1,6 +1,7 @@
 package br.ftcoin.view;
 
 import br.ftcoin.controller.RelatorioController;
+import br.ftcoin.dto.RelatorioCarteiraDTO;
 import br.ftcoin.exception.ValidacaoException;
 import br.ftcoin.model.Carteira;
 import br.ftcoin.service.OraculoException;
@@ -13,8 +14,10 @@ public class RelatorioView {
 
     private static final List<String> OPCOES = List.of(
             "reportMenu.sortedWalletsById",
-            "reportMenu.sortedWalletsByHolder"
-            // as outras opções entram conforme as tasks forem saindo
+            "reportMenu.sortedWalletsByHolder",
+            "reportMenu.walletBalance",
+            "reportMenu.walletHistory",
+            "reportMenu.walletGainLoss"
     );
 
     private final RelatorioController controller;
@@ -35,6 +38,9 @@ public class RelatorioView {
                 switch (opcao) {
                     case 1 -> exibirCarteiras("report.wallets.byId.title", controller.listarCarteirasPorId());
                     case 2 -> exibirCarteiras("report.wallets.byHolder.title", controller.listarCarteirasPorTitular());
+                    case 3 -> exibirSaldo(controller.gerarSaldoAtual(lerId("report.wallet.balance.prompt")));
+                    case 4 -> exibirHistorico(controller.gerarHistorico(lerId("report.wallet.history.prompt")));
+                    case 5 -> exibirGanhoPerda(controller.gerarGanhoPerdaTodas());
                     default -> { }
                 }
             } catch (ValidacaoException | OraculoException e) {
@@ -43,6 +49,12 @@ public class RelatorioView {
             if (opcao != 0) console.pausar();
         } while (opcao != 0);
     }
+
+    private int lerId(String chavePrompt) {
+        return console.lerInteiro(I18n.get(chavePrompt));
+    }
+
+    // ---------- carteiras ordenadas ----------
 
     private void exibirCarteiras(String chaveTitulo, List<Carteira> carteiras) {
         if (carteiras.isEmpty()) {
@@ -56,6 +68,86 @@ public class RelatorioView {
                 I18n.get("report.wallet.table.broker"));
         for (Carteira c : carteiras) {
             System.out.printf("%-6d %-30s %-20s%n", c.getId(), c.getTitular(), c.getCorretora());
+        }
+    }
+
+    // ---------- saldo atual da carteira ----------
+
+    private void exibirSaldo(RelatorioCarteiraDTO d) {
+        System.out.println(ConsoleUtils.NEGRITO + I18n.get("report.wallet.currentBalance.title") + ConsoleUtils.RESET);
+        System.out.println(I18n.get("report.wallet.currentBalance.id") + " " + d.id());
+        System.out.println(I18n.get("report.wallet.currentBalance.holder") + " " + d.titular());
+        System.out.println(I18n.get("report.wallet.currentBalance.broker") + " " + d.corretora());
+        System.out.println(I18n.get("report.wallet.currentBalance.balance") + " " + d.saldoQuantidade());
+        System.out.println(I18n.get("report.wallet.currentBalance.financialBalance") + " " + d.saldoFinanceiro());
+    }
+
+    // ---------- histórico de movimentações ----------
+
+    private void exibirHistorico(RelatorioCarteiraDTO.Historico h) {
+        System.out.println(ConsoleUtils.NEGRITO + I18n.get("report.wallet.history.title") + ConsoleUtils.RESET);
+        System.out.println(I18n.get("report.wallet.history.id") + " " + h.id());
+        System.out.println(I18n.get("report.wallet.history.holder") + " " + h.titular());
+        System.out.println(I18n.get("report.wallet.history.broker") + " " + h.corretora());
+
+        if (h.movimentos().isEmpty()) {
+            console.exibirAlerta(I18n.get("report.wallet.history.empty"));
+            return;
+        }
+        System.out.printf("%-12s %-10s %-18s %-15s%n",
+                I18n.get("report.wallet.history.table.date"),
+                I18n.get("report.wallet.history.table.type"),
+                I18n.get("report.wallet.history.table.quantity"),
+                I18n.get("report.wallet.history.table.quote"));
+        for (RelatorioCarteiraDTO.Movimento m : h.movimentos()) {
+            System.out.printf("%-12s %-10s %-18s %-15s%n",
+                    m.data(), I18n.get(m.tipoChave()), m.quantidade(), m.cotacao());
+        }
+    }
+
+    // ---------- ganho/perda e valoração a mercado (todas as carteiras) ----------
+
+    private void exibirGanhoPerda(List<RelatorioCarteiraDTO.GanhoPerda> carteiras) {
+        System.out.println(ConsoleUtils.NEGRITO + I18n.get("report.wallet.gainLoss.title") + ConsoleUtils.RESET);
+        boolean desatualizada = false;
+
+        for (RelatorioCarteiraDTO.GanhoPerda g : carteiras) {
+            System.out.println();
+            System.out.println(I18n.get("report.wallet.currentBalance.id") + " " + g.id()
+                    + "  " + I18n.get("report.wallet.currentBalance.holder") + " " + g.titular());
+
+            if (g.operacoes().isEmpty()) {
+                console.exibirAlerta(I18n.get("report.wallet.history.empty"));
+            } else {
+                String formato = "%-12s %-8s %-12s %-14s %-12s %-16s %-16s %-14s%n";
+                System.out.printf(formato,
+                        I18n.get("report.wallet.history.table.date"),
+                        I18n.get("report.wallet.history.table.type"),
+                        I18n.get("report.wallet.history.table.quantity"),
+                        I18n.get("report.wallet.gainLoss.table.price"),
+                        I18n.get("report.wallet.gainLoss.table.balance"),
+                        I18n.get("report.wallet.gainLoss.table.operationResult"),
+                        I18n.get("report.wallet.gainLoss.table.accumulatedResult"),
+                        I18n.get("report.wallet.gainLoss.table.averageCost"));
+                for (RelatorioCarteiraDTO.OperacaoApurada op : g.operacoes()) {
+                    System.out.printf(formato, op.data(), I18n.get(op.tipoChave()), op.quantidade(),
+                            op.preco(), op.saldo(), op.resultadoOperacao(),
+                            op.resultadoAcumulado(), op.custoMedio());
+                }
+            }
+
+            System.out.println(I18n.get("report.wallet.gainLoss.table.price") + " "
+                    + g.cotacaoAtual() + " (" + g.dataCotacao() + ")");
+            System.out.println(I18n.get("report.financial.result") + " " + g.quantidade());
+            System.out.println(I18n.get("report.wallet.gainLoss.table.averageCost") + ": " + g.custoMedio());
+            System.out.println(I18n.get("report.wallet.gainLoss.table.accumulatedResult") + ": " + g.resultadoAcumulado());
+            System.out.println(I18n.get("report.wallet.gainLoss.marketBalance") + " " + g.saldoMercado());
+            System.out.println(I18n.get("report.financial.gainLoss") + " " + g.resultadoPotencial());
+            desatualizada |= g.cotacaoDesatualizada();
+        }
+
+        if (desatualizada) {
+            console.exibirAlerta(I18n.get("report.wallet.gainLoss.staleQuote"));
         }
     }
 }
