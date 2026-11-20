@@ -10,6 +10,18 @@ import br.ftcoin.util.I18n;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Telas dos relatórios de carteira.
+ *
+ * <p>Responsável apenas pela apresentação e pela interação com o usuário:
+ * solicita os dados ao {@link RelatorioController} e os exibe. Não realiza
+ * cálculos nem aplica regras de negócio. Erros tratados pelo controlador
+ * ({@link ValidacaoException} e {@link OraculoException}) são exibidos como
+ * mensagens amigáveis, sem interromper o programa.</p>
+ *
+ * @author Equipe FT_Coin
+ * @version 1.0
+ */
 public class RelatorioView {
 
     private static final List<String> OPCOES = List.of(
@@ -24,12 +36,23 @@ public class RelatorioView {
     private final ConsoleUtils console;
     private final MenuView menu;
 
+    /**
+     * Cria a view de relatórios.
+     *
+     * @param console    utilitário de entrada e saída no console
+     * @param controller controlador que fornece os dados dos relatórios
+     * @throws NullPointerException se algum argumento for nulo
+     */
     public RelatorioView(ConsoleUtils console, RelatorioController controller) {
         this.console = Objects.requireNonNull(console);
         this.controller = Objects.requireNonNull(controller);
         this.menu = new MenuView(this.console);
     }
 
+    /**
+     * Exibe o menu de relatórios e trata as escolhas do usuário até que ele
+     * volte ao menu principal (opção 0).
+     */
     public void exibirMenu() {
         int opcao;
         do {
@@ -54,8 +77,6 @@ public class RelatorioView {
         return console.lerInteiro(I18n.get(chavePrompt));
     }
 
-    // ---------- carteiras ordenadas ----------
-
     private void exibirCarteiras(String chaveTitulo, List<Carteira> carteiras) {
         if (carteiras.isEmpty()) {
             console.exibirErro(I18n.get("report.wallets.empty"));
@@ -71,8 +92,6 @@ public class RelatorioView {
         }
     }
 
-    // ---------- saldo atual da carteira ----------
-
     private void exibirSaldo(RelatorioCarteiraDTO d) {
         System.out.println(ConsoleUtils.NEGRITO + I18n.get("report.wallet.currentBalance.title") + ConsoleUtils.RESET);
         System.out.println(I18n.get("report.wallet.currentBalance.id") + " " + d.id());
@@ -81,8 +100,6 @@ public class RelatorioView {
         System.out.println(I18n.get("report.wallet.currentBalance.balance") + " " + d.saldoQuantidade());
         System.out.println(I18n.get("report.wallet.currentBalance.financialBalance") + " " + d.saldoFinanceiro());
     }
-
-    // ---------- histórico de movimentações ----------
 
     private void exibirHistorico(RelatorioCarteiraDTO.Historico h) {
         System.out.println(ConsoleUtils.NEGRITO + I18n.get("report.wallet.history.title") + ConsoleUtils.RESET);
@@ -105,8 +122,6 @@ public class RelatorioView {
         }
     }
 
-    // ---------- ganho/perda e valoração a mercado (todas as carteiras) ----------
-
     private void exibirGanhoPerda(List<RelatorioCarteiraDTO.GanhoPerda> carteiras) {
         System.out.println(ConsoleUtils.NEGRITO + I18n.get("report.wallet.gainLoss.title") + ConsoleUtils.RESET);
         boolean desatualizada = false;
@@ -116,9 +131,7 @@ public class RelatorioView {
             System.out.println(I18n.get("report.wallet.currentBalance.id") + " " + g.id()
                     + "  " + I18n.get("report.wallet.currentBalance.holder") + " " + g.titular());
 
-            if (g.operacoes().isEmpty()) {
-                console.exibirAlerta(I18n.get("report.wallet.history.empty"));
-            } else {
+            if (!g.operacoes().isEmpty()) {
                 String formato = "%-12s %-8s %-12s %-14s %-12s %-16s %-16s %-14s%n";
                 System.out.printf(formato,
                         I18n.get("report.wallet.history.table.date"),
