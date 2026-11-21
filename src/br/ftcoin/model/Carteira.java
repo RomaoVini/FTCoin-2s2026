@@ -2,204 +2,122 @@ package br.ftcoin.model;
 
 import br.ftcoin.exception.ValidacaoException;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.Comparator;
-import java.util.List;
 import java.util.Objects;
 
 /**
- * Acumulador das métricas financeiras de uma carteira.
- *
- * <p>Processa movimentações em ordem cronológica e mantém saldo de moedas,
- * custo médio, totais comprados e vendidos e resultados realizado e de mercado.</p>
+ * Entidade de domínio que representa uma carteira de moedas virtuais no sistema FT_Coin.
+ * Garante a integridade de seus atributos desde a instanciação através de validações
+ * internacionalizadas ({@link ValidacaoException}).
  *
  * @author Equipe FT_Coin
  * @version 2.0
  */
-public final class CarteiraFinanceira {
+public class Carteira {
 
-    /** Número de casas decimais usado no cálculo do custo médio. */
-    private static final int ESCALA_CUSTO_MEDIO = 20;
-
-    /** Quantidade de moedas atualmente mantida na carteira. */
-    private BigDecimal saldoQuantidade = BigDecimal.ZERO;
-
-    /** Custo médio de aquisição por moeda. */
-    private BigDecimal custoMedio = BigDecimal.ZERO;
-
-    /** Valor financeiro total acumulado em compras. */
-    private BigDecimal totalComprado = BigDecimal.ZERO;
-
-    /** Valor financeiro total acumulado em vendas. */
-    private BigDecimal totalVendido = BigDecimal.ZERO;
-
-    /** Resultado operacional da última movimentação registrada. */
-    private BigDecimal resultadoOperacional = BigDecimal.ZERO;
-
-    /** Soma dos resultados operacionais de todas as vendas registradas. */
-    private BigDecimal resultadoAcumulado = BigDecimal.ZERO;
-
-    /** Cotação atual usada para valorar o saldo a preço de mercado (pode ser nula até ser definida). */
-    private Cotacao cotacaoAtual;
+    private final int id;
+    private String titular;
+    private String corretora;
 
     /**
-     * Atualiza as métricas para uma movimentação e sua cotação histórica.
+     * Constrói uma nova instância válida de {@link Carteira}.
      *
-     * @param movimentacao movimentação a registrar
-     * @param cotacao cotação válida na data da movimentação
-     * @return o resultado operacional da movimentação (zero para compras)
-     * @throws NullPointerException se a movimentação ou a cotação forem nulas
-     * @throws ValidacaoException se uma venda exceder o saldo disponível
+     * @param id        Identificador numérico único da carteira (deve ser maior que zero).
+     * @param titular   Nome completo do proprietário da carteira.
+     * @param corretora Nome da corretora custodiante.
+     * @throws ValidacaoException se o {@code id} for menor ou igual a zero, ou se {@code titular}/{@code corretora} forem nulos ou vazios.
      */
-    public BigDecimal registrarMovimentacao(Movimentacao movimentacao, Cotacao cotacao) {
-        Objects.requireNonNull(movimentacao, "Movimentação obrigatória");
-        Objects.requireNonNull(cotacao, "Cotação da movimentação obrigatória");
-
-        BigDecimal saldoAnterior = saldoQuantidade;
-        BigDecimal saldoNovo = aplicarQuantidade(saldoAnterior, movimentacao);
-        BigDecimal valorMovimentado = movimentacao.getQuantidade().multiply(cotacao.getValor());
-        resultadoOperacional = BigDecimal.ZERO;
-
-        if (movimentacao.isCompra()) {
-            BigDecimal saldoFinanceiroAnterior = saldoAnterior.multiply(custoMedio);
-            custoMedio = saldoFinanceiroAnterior.add(valorMovimentado)
-                    .divide(saldoNovo, ESCALA_CUSTO_MEDIO, RoundingMode.HALF_EVEN);
-            totalComprado = totalComprado.add(valorMovimentado);
-        } else {
-            resultadoOperacional = valorMovimentado.subtract(movimentacao.getQuantidade().multiply(custoMedio));
-            totalVendido = totalVendido.add(valorMovimentado);
-            resultadoAcumulado = resultadoAcumulado.add(resultadoOperacional);
+    public Carteira(int id, String titular, String corretora) {
+        if (id <= 0) {
+            throw new ValidacaoException("wallet.error.invalidId", String.valueOf(id));
         }
-
-        saldoQuantidade = saldoNovo;
-        return resultadoOperacional;
+        this.id = id;
+        setTitular(titular);
+        setCorretora(corretora);
     }
 
     /**
-     * Calcula o saldo de uma sequência de movimentações em ordem cronológica.
+     * Retorna o identificador único da carteira.
      *
-     * @param movimentacoes histórico de movimentações
-     * @return saldo de moedas após aplicar todas as operações
-     * @throws NullPointerException se o histórico ou algum de seus elementos for nulo
-     * @throws ValidacaoException se uma venda exceder o saldo disponível
+     * @return Identificador numérico da carteira.
      */
-    public static BigDecimal calcularSaldoQuantidade(List<Movimentacao> movimentacoes) {
-        Objects.requireNonNull(movimentacoes, "Histórico de movimentações obrigatório");
-        BigDecimal saldo = BigDecimal.ZERO;
-        for (Movimentacao movimentacao : movimentacoes.stream()
-                .sorted(Comparator.comparing(Movimentacao::getDataOperacao)
-                        .thenComparingInt(Movimentacao::getIdMovimento))
-                .toList()) {
-            Objects.requireNonNull(movimentacao, "Movimentação obrigatória");
-            saldo = aplicarQuantidade(saldo, movimentacao);
+    public int getId() {
+        return id;
+    }
+
+    /**
+     * Retorna o nome do titular da carteira.
+     *
+     * @return Nome do titular.
+     */
+    public String getTitular() {
+        return titular;
+    }
+
+    /**
+     * Define o nome do titular da carteira após validar e remover espaços excedentes.
+     *
+     * @param titular Nome do titular.
+     * @throws ValidacaoException se o {@code titular} for nulo ou composto apenas por espaços em branco.
+     */
+    public void setTitular(String titular) {
+        if (titular == null || titular.isBlank()) {
+            throw new ValidacaoException("wallet.error.holderRequired");
         }
-        return saldo;
+        this.titular = titular.trim();
     }
 
     /**
-     * Aplica a quantidade de uma movimentação ao saldo informado.
+     * Retorna o nome da corretora vinculada à carteira.
      *
-     * @param saldoAnterior saldo de moedas antes da movimentação
-     * @param movimentacao movimentação a aplicar (soma se compra, subtrai se venda)
-     * @return novo saldo de moedas
-     * @throws ValidacaoException se o novo saldo ficar negativo
+     * @return Nome da corretora.
      */
-    private static BigDecimal aplicarQuantidade(BigDecimal saldoAnterior, Movimentacao movimentacao) {
-        BigDecimal saldoNovo = movimentacao.isCompra()
-                ? saldoAnterior.add(movimentacao.getQuantidade())
-                : saldoAnterior.subtract(movimentacao.getQuantidade());
-        if (saldoNovo.signum() < 0) {
-            throw new ValidacaoException("transaction.sell.insufficientBalance");
+    public String getCorretora() {
+        return corretora;
+    }
+
+    /**
+     * Define o nome da corretora após validar e remover espaços excedentes.
+     *
+     * @param corretora Nome da corretora.
+     * @throws ValidacaoException se a {@code corretora} for nula ou composta apenas por espaços em branco.
+     */
+    public void setCorretora(String corretora) {
+        if (corretora == null || corretora.isBlank()) {
+            throw new ValidacaoException("wallet.error.brokerRequired");
         }
-        return saldoNovo;
+        this.corretora = corretora.trim();
     }
 
     /**
-     * Define a cotação atual usada no cálculo do valor de mercado da carteira.
+     * Compara duas carteiras com base exclusivamente em seu identificador único ({@code id}).
      *
-     * @param cotacaoAtual cotação mais recente da moeda
-     * @throws NullPointerException se a cotação for nula
+     * @param o Objeto a ser comparado.
+     * @return {@code true} se ambos representarem a carteira com o mesmo {@code id}.
      */
-    public void atualizarCotacaoAtual(Cotacao cotacaoAtual) {
-        this.cotacaoAtual = Objects.requireNonNull(cotacaoAtual, "Cotação atual obrigatória");
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Carteira carteira)) return false;
+        return id == carteira.id;
     }
 
     /**
-     * Retorna a quantidade de moedas atualmente mantida na carteira.
+     * Gera o código hash baseado no identificador único da carteira.
      *
-     * @return saldo de moedas
+     * @return Código hash do {@code id}.
      */
-    public BigDecimal getSaldoQuantidade() {
-        return saldoQuantidade;
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 
     /**
-     * Retorna o custo médio de aquisição por moeda.
+     * Retorna uma representação textual estruturada da carteira.
      *
-     * @return custo médio unitário
+     * @return String formatada com ID, titular e corretora.
      */
-    public BigDecimal getCustoMedio() {
-        return custoMedio;
-    }
-
-    /**
-     * Retorna o valor financeiro do saldo pelo custo médio de aquisição.
-     *
-     * @return saldo em moeda fiduciária pelo custo médio
-     */
-    public BigDecimal getSaldoFinanceiro() {
-        return saldoQuantidade.multiply(custoMedio);
-    }
-
-    /**
-     * Retorna o valor de mercado do saldo usando a cotação atual.
-     *
-     * @return saldo em moeda fiduciária pela cotação atual
-     * @throws IllegalStateException se a cotação atual ainda não tiver sido definida
-     */
-    public BigDecimal getSaldoMercado() {
-        return saldoQuantidade.multiply(obterCotacaoAtual().getValor());
-    }
-
-    /**
-     * Retorna o resultado operacional da última movimentação registrada.
-     *
-     * @return resultado da última operação (zero para compras)
-     */
-    public BigDecimal getResultadoOperacional() {
-        return resultadoOperacional;
-    }
-
-    /**
-     * Retorna a soma dos resultados operacionais das vendas registradas.
-     *
-     * @return resultado acumulado das operações
-     */
-    public BigDecimal getResultadoAcumulado() {
-        return resultadoAcumulado;
-    }
-
-    /**
-     * Calcula o resultado total considerando as vendas e o valor de mercado atual.
-     *
-     * @return resultado realizado e não realizado da carteira
-     * @throws IllegalStateException se a cotação atual ainda não tiver sido definida
-     */
-    public BigDecimal getResultadoMercado() {
-        return totalVendido.add(getSaldoMercado()).subtract(totalComprado);
-    }
-
-    /**
-     * Retorna a cotação atual, garantindo que ela já tenha sido definida.
-     *
-     * @return cotação atual
-     * @throws IllegalStateException se a cotação atual ainda não tiver sido definida
-     */
-    private Cotacao obterCotacaoAtual() {
-        if (cotacaoAtual == null) {
-            throw new IllegalStateException("Cotação atual ainda não foi definida");
-        }
-        return cotacaoAtual;
+    @Override
+    public String toString() {
+        return String.format("Carteira{id=%d, titular='%s', corretora='%s'}", id, titular, corretora);
     }
 }
