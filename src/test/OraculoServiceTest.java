@@ -1,4 +1,4 @@
-package br.ftcoin.service;
+package test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -21,6 +21,8 @@ import org.junit.jupiter.api.Test;
 import br.ftcoin.dto.ExchangeRate;
 import br.ftcoin.model.Cotacao;
 import br.ftcoin.network.NetworkResponse;
+import br.ftcoin.service.OraculoException;
+import br.ftcoin.service.OraculoService;
 
 class OraculoServiceTest {
    @Test

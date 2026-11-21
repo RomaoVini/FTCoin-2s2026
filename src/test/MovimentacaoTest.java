@@ -1,3 +1,5 @@
+package test;
+
 import br.ftcoin.controller.MovimentacaoController;
 import br.ftcoin.dao.CarteiraDAO;
 import br.ftcoin.dao.CarteiraDAOMemoria;
@@ -15,6 +17,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;

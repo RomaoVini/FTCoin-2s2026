@@ -1,8 +1,9 @@
-package br.ftcoin.model;
+package test;
 
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
+import br.ftcoin.model.Carteira;
 
 class CarteiraTest {
 
