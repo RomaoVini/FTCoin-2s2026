@@ -10,9 +10,13 @@ import br.ftcoin.controller.AppController;
  *
  * @author Equipe FT_Coin
  * @version 2.0
+ * @see AppController
  */
 public final class Main {
 
+    /**
+     * Construtor privado para evitar instanciação da classe principal.
+     */
     private Main() {
     }
 

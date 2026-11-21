@@ -15,25 +15,55 @@ import java.util.List;
  */
 public enum MenuOperacao {
 
+    /** Módulo de Carteiras (opção 1): cadastro, listagem, edição e exclusão. */
     CARTEIRA(1, "mainMenu.wallet"),
+
+    /** Módulo de Movimentações (opção 2): compra, venda e cotação de FTCoins. */
     MOVIMENTACAO(2, "mainMenu.transaction"),
+
+    /** Módulo de Relatórios (opção 3): listagens, saldo, histórico e ganho/perda. */
     RELATORIOS(3, "mainMenu.reports"),
+
+    /** Tela de Ajuda e Créditos (opção 4). */
     AJUDA(4, "mainMenu.help"),
+
+    /** Troca do idioma da interface (opção 5). */
     IDIOMA(5, "mainMenu.language"),
+
+    /** Encerramento da aplicação (opção 0). */
     SAIR(0, "mainMenu.exit");
 
+    /** Número digitado pelo usuário para escolher a opção. */
     private final int codigo;
+
+    /** Chave {@code I18n} do texto exibido para a opção no menu. */
     private final String chaveI18n;
 
+    /**
+     * Constrói uma opção do menu associando o código numérico à chave de internacionalização.
+     *
+     * @param codigo    Número digitado pelo usuário para escolher a opção.
+     * @param chaveI18n Chave {@code I18n} do texto exibido no menu.
+     */
     MenuOperacao(int codigo, String chaveI18n) {
         this.codigo = codigo;
         this.chaveI18n = chaveI18n;
     }
 
+    /**
+     * Retorna o código numérico associado à opção.
+     *
+     * @return Número que o usuário digita para escolher esta opção.
+     */
     public int getCodigo() {
         return codigo;
     }
 
+    /**
+     * Retorna a chave de internacionalização do texto da opção.
+     *
+     * @return Chave {@code I18n} usada para obter o texto traduzido do menu.
+     */
     public String getChaveI18n() {
         return chaveI18n;
     }

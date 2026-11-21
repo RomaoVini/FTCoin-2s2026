@@ -36,24 +36,43 @@ import java.util.Objects;
  *
  * @author Equipe FT_Coin
  * @version 1.0
+ * @see RelatorioView
+ * @see RelatorioCarteiraDTO
  */
 public final class RelatorioController {
 
+    /** Localidade usada na formatação de moeda e na ordenação alfabética (português do Brasil). */
     private static final Locale PT_BR = Locale.forLanguageTag("pt-BR");
+
+    /** Formato de data exibido nos relatórios ({@code dd/MM/yyyy}). */
     private static final DateTimeFormatter FORMATO_DATA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
+    /** Critério de ordenação das carteiras por identificador crescente. */
     private static final Comparator<Carteira> POR_ID =
             Comparator.comparingInt(Carteira::getId);
 
+    /**
+     * Critério de ordenação das carteiras pelo nome do titular, ignorando acentos
+     * e maiúsculas; o identificador desempata nomes repetidos.
+     */
     // PRIMARY ignora acento e maiúscula; o id desempata nomes repetidos
     private static final Comparator<Carteira> POR_TITULAR =
             Comparator.comparing(Carteira::getTitular, criarCollator())
                       .thenComparingInt(Carteira::getId);
 
+    /** Acesso aos dados das carteiras. */
     private final CarteiraDAO carteiraDAO;
+
+    /** Acesso aos dados das movimentações. */
     private final MovimentacaoDAO movimentacaoDAO;
+
+    /** Fonte de cotações históricas e atuais da FTCoin. */
     private final OraculoCotacao oraculo;
+
+    /** Serviço do Model responsável pelos cálculos financeiros da carteira. */
     private final CalculoFinanceiroService calculo;
+
+    /** View de relatórios associada a este controlador. */
     private final RelatorioView view;
 
     /** Última cotação atual obtida com sucesso; serve de fallback se o Oráculo falhar. */
@@ -107,6 +126,13 @@ public final class RelatorioController {
         return ordenar(POR_TITULAR);
     }
 
+    /**
+     * Obtém todas as carteiras do DAO e as ordena segundo o critério informado,
+     * sem alterar a coleção original.
+     *
+     * @param criterio comparador que define a ordem das carteiras
+     * @return nova lista ordenada (vazia se não houver carteiras)
+     */
     private List<Carteira> ordenar(Comparator<Carteira> criterio) {
         List<Carteira> lista = new ArrayList<>(carteiraDAO.consultarTodos());
         lista.sort(criterio);
@@ -207,6 +233,17 @@ public final class RelatorioController {
         return relatorio;
     }
 
+    /**
+     * Apura o ganho ou perda de uma única carteira: processa suas movimentações em
+     * ordem cronológica, registra cada operação no Model e valoriza a posição final
+     * pela cotação atual.
+     *
+     * @param carteira      carteira a ser apurada
+     * @param atual         cotação atual usada na valoração a mercado
+     * @param desatualizada {@code true} se a cotação atual veio do cache por falha do Oráculo
+     * @return relatório de ganho/perda da carteira, já formatado
+     * @throws OraculoException se o Oráculo falhar ao fornecer a cotação de alguma operação
+     */
     private RelatorioCarteiraDTO.GanhoPerda apurar(Carteira carteira, Cotacao atual, boolean desatualizada) {
         CarteiraFinanceira financeiro = new CarteiraFinanceira();
         List<RelatorioCarteiraDTO.OperacaoApurada> operacoes = new ArrayList<>();
@@ -241,11 +278,25 @@ public final class RelatorioController {
 
     // ---------- Utilitários ----------
 
+    /**
+     * Busca uma carteira pelo identificador.
+     *
+     * @param idCarteira identificador da carteira
+     * @return carteira encontrada
+     * @throws ValidacaoException se a carteira não existir
+     */
     private Carteira buscarCarteira(int idCarteira) {
         return carteiraDAO.consultar(idCarteira)
                 .orElseThrow(() -> new ValidacaoException("wallet.error.notFound", idCarteira));
     }
 
+    /**
+     * Obtém as movimentações de uma carteira em ordem cronológica, usando o
+     * identificador do movimento para desempatar operações da mesma data.
+     *
+     * @param idCarteira identificador da carteira
+     * @return nova lista ordenada (vazia se não houver movimentações)
+     */
     private List<Movimentacao> movimentacoesEmOrdem(int idCarteira) {
         List<Movimentacao> movimentacoes = new ArrayList<>(movimentacaoDAO.consultarPorCarteira(idCarteira));
         movimentacoes.sort(Comparator.comparing(Movimentacao::getDataOperacao)
@@ -253,18 +304,43 @@ public final class RelatorioController {
         return movimentacoes;
     }
 
+    /**
+     * Retorna a chave de internacionalização correspondente ao tipo da movimentação.
+     *
+     * @param movimentacao movimentação analisada
+     * @return chave {@code I18n} de compra ou de venda
+     */
     private static String chaveDoTipo(Movimentacao movimentacao) {
         return movimentacao.isCompra() ? "report.wallet.history.type.buy" : "report.wallet.history.type.sell";
     }
 
+    /**
+     * Formata uma quantidade de FTCoins como texto simples, sem notação científica
+     * e sem zeros à direita.
+     *
+     * @param valor quantidade a ser formatada
+     * @return quantidade formatada
+     */
     private static String quantidade(BigDecimal valor) {
         return valor.stripTrailingZeros().toPlainString();
     }
 
+    /**
+     * Formata um valor monetário no padrão de moeda do Brasil (ex.: {@code R$ 1.234,56}).
+     *
+     * @param valor valor a ser formatado
+     * @return valor monetário formatado
+     */
     private static String moeda(BigDecimal valor) {
         return NumberFormat.getCurrencyInstance(PT_BR).format(valor);
     }
 
+    /**
+     * Cria o {@link Collator} usado na ordenação alfabética dos titulares,
+     * com força {@link Collator#PRIMARY} para ignorar acentos e maiúsculas.
+     *
+     * @return collator configurado para português do Brasil
+     */
     private static Collator criarCollator() {
         Collator c = Collator.getInstance(PT_BR);
         c.setStrength(Collator.PRIMARY);

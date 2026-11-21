@@ -21,9 +21,12 @@ import java.util.Objects;
  *
  * @author Equipe FT_Coin
  * @version 1.0
+ * @see RelatorioController
+ * @see RelatorioCarteiraDTO
  */
 public class RelatorioView {
 
+    /** Chaves {@link I18n} das opções numeradas exibidas no submenu de Relatórios (de 1 a 5). */
     private static final List<String> OPCOES = List.of(
             "reportMenu.sortedWalletsById",
             "reportMenu.sortedWalletsByHolder",
@@ -32,8 +35,13 @@ public class RelatorioView {
             "reportMenu.walletGainLoss"
     );
 
+    /** Controlador que fornece os dados já calculados e formatados dos relatórios. */
     private final RelatorioController controller;
+
+    /** Utilitário de console para leitura de entradas e exibição de mensagens formatadas. */
     private final ConsoleUtils console;
+
+    /** Componente de menu reutilizável usado para renderizar o submenu de Relatórios. */
     private final MenuView menu;
 
     /**
@@ -52,6 +60,9 @@ public class RelatorioView {
     /**
      * Exibe o menu de relatórios e trata as escolhas do usuário até que ele
      * volte ao menu principal (opção 0).
+     *
+     * <p>Erros de validação e falhas do Oráculo lançados pelo controlador são
+     * exibidos ao usuário sem encerrar o loop.</p>
      */
     public void exibirMenu() {
         int opcao;
@@ -73,10 +84,23 @@ public class RelatorioView {
         } while (opcao != 0);
     }
 
+    /**
+     * Solicita ao usuário o identificador de uma carteira.
+     *
+     * @param chavePrompt chave {@link I18n} do texto de instrução exibido antes da leitura
+     * @return identificador inteiro informado pelo usuário
+     */
     private int lerId(String chavePrompt) {
         return console.lerInteiro(I18n.get(chavePrompt));
     }
 
+    /**
+     * Exibe uma tabela com as carteiras informadas (identificador, titular e corretora).
+     * Se a lista estiver vazia, exibe uma mensagem de erro.
+     *
+     * @param chaveTitulo chave {@link I18n} do título da listagem
+     * @param carteiras   carteiras já ordenadas pelo controlador
+     */
     private void exibirCarteiras(String chaveTitulo, List<Carteira> carteiras) {
         if (carteiras.isEmpty()) {
             console.exibirErro(I18n.get("report.wallets.empty"));
@@ -92,6 +116,11 @@ public class RelatorioView {
         }
     }
 
+    /**
+     * Exibe o relatório de saldo atual de uma carteira (quantidade de FTCoins e saldo financeiro).
+     *
+     * @param d dados do saldo, já formatados pelo controlador
+     */
     private void exibirSaldo(RelatorioCarteiraDTO d) {
         System.out.println(ConsoleUtils.NEGRITO + I18n.get("report.wallet.currentBalance.title") + ConsoleUtils.RESET);
         System.out.println(I18n.get("report.wallet.currentBalance.id") + " " + d.id());
@@ -101,6 +130,12 @@ public class RelatorioView {
         System.out.println(I18n.get("report.wallet.currentBalance.financialBalance") + " " + d.saldoFinanceiro());
     }
 
+    /**
+     * Exibe o histórico de movimentações de uma carteira em formato de tabela.
+     * Se não houver movimentações, exibe um alerta após os dados da carteira.
+     *
+     * @param h histórico da carteira, já formatado pelo controlador
+     */
     private void exibirHistorico(RelatorioCarteiraDTO.Historico h) {
         System.out.println(ConsoleUtils.NEGRITO + I18n.get("report.wallet.history.title") + ConsoleUtils.RESET);
         System.out.println(I18n.get("report.wallet.history.id") + " " + h.id());
@@ -122,6 +157,13 @@ public class RelatorioView {
         }
     }
 
+    /**
+     * Exibe o relatório de ganho ou perda de todas as carteiras: a apuração
+     * operação a operação e a valoração a mercado de cada uma. Se alguma carteira
+     * usou uma cotação desatualizada (falha do Oráculo), exibe um alerta ao final.
+     *
+     * @param carteiras relatórios de ganho/perda, um por carteira, já formatados pelo controlador
+     */
     private void exibirGanhoPerda(List<RelatorioCarteiraDTO.GanhoPerda> carteiras) {
         System.out.println(ConsoleUtils.NEGRITO + I18n.get("report.wallet.gainLoss.title") + ConsoleUtils.RESET);
         boolean desatualizada = false;
