@@ -21,6 +21,7 @@ import java.util.Optional;
  */
 public final class CarteiraDAOMemoria implements CarteiraDAO {
 
+    /** Armazenamento das carteiras em memória, indexadas pelo identificador e mantidas na ordem de inclusão. */
     private final Map<Integer, Carteira> carteiras = new LinkedHashMap<>();
 
     /**

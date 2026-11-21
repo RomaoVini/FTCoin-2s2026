@@ -1,12 +1,12 @@
 /*
  * ************************************************************************************************************************
- * Prof. Dr. Andr� F. de Angelis
+ * Prof. Dr. André F. de Angelis
  * Unicamp - Universidade Estadual de Campinas
  * FT - Faculdade de Tecnologia
  * ************************************************************************************************************************
  * Escrito em Java 20, usando IDE Eclipse 2023-06, em ambiente Windows 11
  *
- * Vers�o 1.0
+ * Versão 1.0
  * 07.Outubro.2026
  *
  * ************************************************************************************************************************
@@ -33,6 +33,7 @@ import br.ftcoin.service.OraculoService;
  */
 public final class OracleSimpleClient
    {
+   /** Serviço que encapsula a comunicação de rede com o servidor de cotações. */
    private final OraculoService oraculo;
 
    /**
@@ -85,16 +86,35 @@ public final class OracleSimpleClient
          }
       }
 
+   /**
+    * Obtém do servidor as cotações de um intervalo de datas.
+    *
+    * @param since data inicial do intervalo (inclusiva)
+    * @param to    data final do intervalo (inclusiva)
+    * @return lista de cotações do período (pode ser vazia)
+    */
    private List<Cotacao> getValues(LocalDate since, LocalDate to)
       {
       return oraculo.obterCotacoes(since, to);
       }
 
+   /**
+    * Consulta as cotações do intervalo informado e as exibe no console.
+    *
+    * @param firstDate data inicial da consulta
+    * @param lastDate  data final da consulta
+    */
    private void go(LocalDate firstDate, LocalDate lastDate)
       {
       printList(getValues(firstDate, lastDate));
       }
 
+   /**
+    * Imprime cada cotação no formato {@code data, valor}; se a lista estiver vazia,
+    * informa que nenhum registro foi encontrado.
+    *
+    * @param records cotações a serem exibidas
+    */
    private void printList(List<Cotacao> records)
       {
       if (!records.isEmpty())

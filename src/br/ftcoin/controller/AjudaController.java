@@ -15,6 +15,7 @@ import java.util.Objects;
  */
 public class AjudaController {
 
+    /** Camada de visualização que renderiza a ajuda e os créditos no console. */
     private final AjudaView view;
 
     /**

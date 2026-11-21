@@ -11,6 +11,8 @@ public class MemoriaDAOFactory extends DAOFactory {
 
     /**
      * {@inheritDoc}
+     *
+     * @return Nova instância de {@link CarteiraDAOMemoria}.
      */
     @Override
     public CarteiraDAO getCarteiraDAO() {
@@ -19,13 +21,11 @@ public class MemoriaDAOFactory extends DAOFactory {
 
     /**
      * {@inheritDoc}
+     *
+     * @return Nova instância de {@link MovimentacaoDAOMemoria}.
      */
     @Override
     public MovimentacaoDAO getMovimentacaoDAO() {
         return new MovimentacaoDAOMemoria();
     }
-
-    /**
-     * {@inheritDoc}
-     */
 }

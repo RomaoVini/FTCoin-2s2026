@@ -19,19 +19,46 @@ import br.ftcoin.network.NetworkResponse;
 /**
  * Integração com o servidor proprietário de cotações FTCoin.
  * A comunicação, protocolo e conversão de respostas ficam encapsulados nesta classe.
+ *
+ * <p>As cotações já consultadas ficam em cache em memória, evitando requisições
+ * repetidas ao servidor para a mesma data.</p>
+ *
+ * @author Equipe FT_Coin
+ * @version 2.0
  */
 public final class OraculoService implements OraculoCotacao {
+
+   /** Nome do grupo cliente usado na autenticação junto ao servidor. */
    private static final String GROUP_NAME = "POO2_2s26_A02";
+
+   /** Credencial do grupo cliente usada na autenticação junto ao servidor. */
    private static final String GROUP_PASSWORD = "W90OL8wsC8";
+
+   /** Endereço padrão do servidor de cotações. */
    private static final String DEFAULT_HOST = "143.106.243.64";
+
+   /** Porta padrão do servidor de cotações. */
    private static final int DEFAULT_PORT = 1234;
+
+   /** Tempo máximo, em milissegundos, para estabelecer a conexão. */
    private static final int CONNECTION_TIMEOUT_MILLIS = 5000;
+
+   /** Tempo máximo, em milissegundos, para aguardar a resposta do servidor. */
    private static final int READ_TIMEOUT_MILLIS = 5000;
 
+   /** Endereço do servidor de cotações. */
    private final String host;
+
+   /** Porta do servidor de cotações. */
    private final int port;
+
+   /** Nome do grupo cliente. */
    private final String groupName;
+
+   /** Credencial do grupo cliente. */
    private final String groupPassword;
+
+   /** Cache thread-safe de cotações já obtidas, indexado pela data. */
    private final ConcurrentMap<LocalDate, Cotacao> cache = new ConcurrentHashMap<>();
 
    /**
@@ -80,6 +107,7 @@ public final class OraculoService implements OraculoCotacao {
 
    /**
     * Obtém do servidor a cotação correspondente à data solicitada.
+    * O resultado é guardado em cache para consultas futuras da mesma data.
     *
     * @param data data da cotação
     * @return cotação válida para a data
@@ -95,6 +123,13 @@ public final class OraculoService implements OraculoCotacao {
       return cache.computeIfAbsent(data, this::consultarCotacaoRemota);
    }
 
+   /**
+    * Consulta o servidor por uma única data e converte a resposta em {@link Cotacao}.
+    *
+    * @param data data da cotação desejada
+    * @return cotação correspondente à data
+    * @throws OraculoException se não houver cotação para a data ou se o valor recebido for inválido
+    */
    private Cotacao consultarCotacaoRemota(LocalDate data) {
       List<ExchangeRate> rates = solicitarCotacoes(data, data);
       for (ExchangeRate rate : rates) {
@@ -111,6 +146,7 @@ public final class OraculoService implements OraculoCotacao {
 
    /**
     * Consulta e converte as cotações de um intervalo de datas.
+    * As cotações recebidas também são adicionadas ao cache.
     *
     * @param desde primeiro dia do intervalo
     * @param ate último dia do intervalo
@@ -135,6 +171,15 @@ public final class OraculoService implements OraculoCotacao {
       }
    }
 
+   /**
+    * Envia uma requisição ao servidor via socket e lê a resposta serializada.
+    *
+    * @param desde primeiro dia do intervalo solicitado
+    * @param ate último dia do intervalo solicitado
+    * @return lista de cotações retornada pelo servidor
+    * @throws OraculoException se houver falha de comunicação, resposta inesperada,
+    *                           mensagem de erro do servidor ou lista de cotações ausente
+    */
    private List<ExchangeRate> solicitarCotacoes(LocalDate desde, LocalDate ate) {
       NetworkResponse response;
       try (Socket socket = new Socket()) {

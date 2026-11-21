@@ -28,10 +28,19 @@ import java.util.Objects;
  */
 public class MovimentacaoController {
 
+    /** Repositório de acesso a dados das movimentações. */
     private final MovimentacaoDAO movimentacaoDAO;
+
+    /** Repositório de acesso a dados das carteiras, usado para validar sua existência. */
     private final CarteiraDAO carteiraDAO;
+
+    /** Serviço de consulta de cotações da moeda virtual. */
     private final OraculoCotacao oraculo;
+
+    /** View genérica de menus; permanece {@code null} quando o controlador é usado sem CLI (ex.: testes). */
     private MenuView menuView;
+
+    /** Utilitário de console para leitura de dados e exibição de mensagens na CLI. */
     private ConsoleUtils consoleUtils;
 
     /**
@@ -156,6 +165,13 @@ public class MovimentacaoController {
         return movimentacaoDAO.consultarPorCarteira(idCarteira);
     }
 
+    /**
+     * Verifica se a carteira possui saldo de moedas suficiente para a venda solicitada.
+     *
+     * @param idCarteira      Identificador da carteira vendedora.
+     * @param quantidadeVenda Quantidade de moedas que se deseja vender.
+     * @throws ValidacaoException se o saldo atual for menor que a quantidade da venda.
+     */
     private void validarSaldoParaVenda(int idCarteira, BigDecimal quantidadeVenda) {
         BigDecimal saldoAtual = calcularSaldoMoedas(idCarteira);
         if (saldoAtual.compareTo(quantidadeVenda) < 0) {
@@ -163,10 +179,22 @@ public class MovimentacaoController {
         }
     }
 
+    /**
+     * Calcula o saldo atual de moedas de uma carteira a partir do seu histórico de movimentações.
+     *
+     * @param idCarteira Identificador da carteira.
+     * @return Saldo de moedas (compras menos vendas).
+     */
     private BigDecimal calcularSaldoMoedas(int idCarteira) {
         return CarteiraFinanceira.calcularSaldoQuantidade(movimentacaoDAO.consultarPorCarteira(idCarteira));
     }
 
+    /**
+     * Conduz, via CLI, o fluxo de uma compra ou venda: lê o identificador da carteira e a quantidade,
+     * registra a movimentação com a data atual e exibe o resultado (sucesso ou erro) ao usuário.
+     *
+     * @param tipo Tipo da operação a ser registrada ({@link TipoOperacao#COMPRA} ou {@link TipoOperacao#VENDA}).
+     */
     private void processarOperacaoCLI(TipoOperacao tipo) {
         try {
             int idCarteira = consoleUtils.lerInteiro(I18n.get("wallet.view.prompt.id"));
@@ -186,6 +214,10 @@ public class MovimentacaoController {
         }
     }
 
+    /**
+     * Consulta no oráculo a cotação da data atual e a exibe no console.
+     * Em caso de falha do oráculo, exibe um alerta com a mensagem do erro.
+     */
     private void exibirCotacaoAtualCLI() {
         try {
             Cotacao cotacao = consultarCotacao(LocalDate.now());

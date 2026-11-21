@@ -40,16 +40,27 @@ public final class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
     /** Código de erro MariaDB/MySQL para violação de chave estrangeira ao inserir/atualizar registro filho. */
     private static final int ERRO_FK_INEXISTENTE = 1452;
 
+    /** Comando SQL para inserir uma nova movimentação (o {@code id_movimento} é gerado pelo banco). */
     private static final String INSERT =
             "INSERT INTO movimentacao (id_carteira, data_operacao, tipo, quantidade) VALUES (?, ?, ?, ?)";
+
+    /** Comando SQL para atualizar todos os campos de uma movimentação existente. */
     private static final String UPDATE =
             "UPDATE movimentacao SET id_carteira = ?, data_operacao = ?, tipo = ?, quantidade = ? WHERE id_movimento = ?";
+
+    /** Comando SQL para excluir uma movimentação pelo identificador. */
     private static final String DELETE =
             "DELETE FROM movimentacao WHERE id_movimento = ?";
+
+    /** Consulta SQL que busca uma movimentação pelo identificador. */
     private static final String SELECT_ID =
             "SELECT id_movimento, id_carteira, data_operacao, tipo, quantidade FROM movimentacao WHERE id_movimento = ?";
+
+    /** Consulta SQL que lista todas as movimentações, das mais recentes para as mais antigas. */
     private static final String SELECT_ALL =
             "SELECT id_movimento, id_carteira, data_operacao, tipo, quantidade FROM movimentacao ORDER BY data_operacao DESC, id_movimento DESC";
+
+    /** Consulta SQL que lista as movimentações de uma carteira, das mais recentes para as mais antigas. */
     private static final String SELECT_CARTEIRA =
             "SELECT id_movimento, id_carteira, data_operacao, tipo, quantidade FROM movimentacao WHERE id_carteira = ? ORDER BY data_operacao DESC, id_movimento DESC";
 
@@ -93,7 +104,7 @@ public final class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
     /**
      * {@inheritDoc}
      *
-     * @throws IllegalArgumentException se a movimentação for nula.
+     * @throws IllegalArgumentException se a movimentação for nula ou a carteira referenciada não existir no banco.
      * @throws NoSuchElementException   se nenhuma movimentação com o ID informado for encontrada.
      */
     @Override
@@ -221,6 +232,10 @@ public final class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
     /**
      * Converte a linha atual do {@link ResultSet} em uma instância de {@link Movimentacao},
      * utilizando o construtor que converte o caractere {@code 'C'} ou {@code 'V'} do banco.
+     *
+     * @param rs Resultado da consulta, posicionado na linha a ser convertida.
+     * @return A {@link Movimentacao} correspondente à linha atual.
+     * @throws SQLException se ocorrer erro ao ler as colunas do resultado.
      */
     private Movimentacao mapear(ResultSet rs) throws SQLException {
         return new Movimentacao(

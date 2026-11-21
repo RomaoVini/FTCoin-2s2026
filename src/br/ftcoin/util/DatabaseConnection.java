@@ -22,16 +22,26 @@ import java.util.Map;
  */
 public final class DatabaseConnection {
 
+    /** URL JDBC padrão do banco, usada quando {@code MARIADB_URL} não está configurada. */
     private static final String DEFAULT_URL =
             "jdbc:mariadb://143.106.243.64:3306/POO2_2s26_A02?useUnicode=true&characterEncoding=utf8&connectionCollation=utf8mb4_unicode_ci";
 
+    /** Pares chave/valor lidos do arquivo local {@code mariadb.env} (vazio se o arquivo não existir). */
     private static final Map<String, String> ENV_LOCAL = carregarArquivoEnv(Path.of("mariadb.env"));
 
+    /** URL JDBC efetivamente utilizada na conexão. */
     private static final String URL = obterConfiguracao("MARIADB_URL", DEFAULT_URL);
+
+    /** Usuário do banco de dados (pode ser nulo se não configurado). */
     private static final String USUARIO = obterConfiguracao("MARIADB_USER", null);
+
+    /** Senha do banco de dados (pode ser nula se não configurada). */
     private static final String SENHA = obterConfiguracao("MARIADB_PASSWORD", null);
 
+    /** Instância única do Singleton. */
     private static DatabaseConnection instancia;
+
+    /** Conexão JDBC ativa com o banco. */
     private Connection conexao;
 
     /**
@@ -85,6 +95,10 @@ public final class DatabaseConnection {
     /**
      * Busca a chave nas variáveis de ambiente do SO; se ausente, procura no arquivo
      * {@code mariadb.env}; se ainda ausente, retorna o valor padrão informado.
+     *
+     * @param chave       Nome da variável de configuração (ex.: {@code MARIADB_USER}).
+     * @param valorPadrao Valor retornado caso a chave não seja encontrada em nenhuma fonte.
+     * @return O valor configurado (sem espaços nas pontas) ou {@code valorPadrao}.
      */
     private static String obterConfiguracao(String chave, String valorPadrao) {
         String envSistema = System.getenv(chave);
@@ -103,6 +117,9 @@ public final class DatabaseConnection {
     /**
      * Lê pares {@code CHAVE=VALOR} do arquivo {@code mariadb.env}, ignorando linhas
      * vazias ou comentadas com {@code #}.
+     *
+     * @param caminho Caminho do arquivo de configuração.
+     * @return Mapa com as configurações lidas (vazio se o arquivo não existir ou não puder ser lido).
      */
     private static Map<String, String> carregarArquivoEnv(Path caminho) {
         Map<String, String> mapa = new HashMap<>();

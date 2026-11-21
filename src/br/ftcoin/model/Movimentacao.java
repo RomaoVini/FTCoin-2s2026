@@ -19,10 +19,19 @@ import java.util.Objects;
  */
 public class Movimentacao {
 
+    /** Identificador único da movimentação ({@code 0} enquanto não persistida). */
     private int idMovimento;
+
+    /** Identificador da carteira titular da operação. */
     private int idCarteira;
+
+    /** Data em que a operação foi realizada. */
     private LocalDate data;
+
+    /** Tipo da operação (compra ou venda). */
     private TipoOperacao tipo;
+
+    /** Quantidade de moedas negociadas (sempre maior que zero). */
     private BigDecimal quantidade;
 
     /**
@@ -185,6 +194,13 @@ public class Movimentacao {
         return tipo == TipoOperacao.VENDA;
     }
 
+    /**
+     * Valida o identificador da movimentação.
+     *
+     * @param idMovimento Identificador a validar.
+     * @return O próprio identificador, se válido.
+     * @throws ValidacaoException se o identificador for negativo.
+     */
     private static int validarIdMovimento(int idMovimento) {
         if (idMovimento < 0) {
             throw new ValidacaoException("transaction.error.negativeId");
@@ -192,6 +208,13 @@ public class Movimentacao {
         return idMovimento;
     }
 
+    /**
+     * Valida o identificador da carteira.
+     *
+     * @param idCarteira Identificador a validar.
+     * @return O próprio identificador, se válido.
+     * @throws ValidacaoException se o identificador for menor ou igual a zero.
+     */
     private static int validarIdCarteira(int idCarteira) {
         if (idCarteira <= 0) {
             throw new ValidacaoException("transaction.error.invalidWalletId", String.valueOf(idCarteira));
@@ -199,6 +222,13 @@ public class Movimentacao {
         return idCarteira;
     }
 
+    /**
+     * Valida a data da operação.
+     *
+     * @param data Data a validar.
+     * @return A própria data, se válida.
+     * @throws ValidacaoException se a data for nula.
+     */
     private static LocalDate validarDataOperacao(LocalDate data) {
         if (data == null) {
             throw new ValidacaoException("transaction.error.dateRequired");
@@ -206,6 +236,13 @@ public class Movimentacao {
         return data;
     }
 
+    /**
+     * Valida o tipo da operação.
+     *
+     * @param tipo Tipo a validar.
+     * @return O próprio tipo, se válido.
+     * @throws ValidacaoException se o tipo for nulo.
+     */
     private static TipoOperacao validarTipoOperacao(TipoOperacao tipo) {
         if (tipo == null) {
             throw new ValidacaoException("transaction.error.typeRequired");
@@ -213,6 +250,13 @@ public class Movimentacao {
         return tipo;
     }
 
+    /**
+     * Valida a quantidade negociada.
+     *
+     * @param quantidade Quantidade a validar.
+     * @return A própria quantidade, se válida.
+     * @throws ValidacaoException se a quantidade for nula, zero ou negativa.
+     */
     private static BigDecimal validarQuantidade(BigDecimal quantidade) {
         if (quantidade == null) {
             throw new ValidacaoException("transaction.error.quantityRequired");
@@ -223,6 +267,12 @@ public class Movimentacao {
         return quantidade;
     }
 
+    /**
+     * Compara duas movimentações com base exclusivamente em seu identificador único ({@code idMovimento}).
+     *
+     * @param o Objeto a ser comparado.
+     * @return {@code true} se ambos representarem a movimentação com o mesmo identificador.
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -230,11 +280,21 @@ public class Movimentacao {
         return idMovimento == that.idMovimento;
     }
 
+    /**
+     * Gera o código hash baseado no identificador único da movimentação.
+     *
+     * @return Código hash do {@code idMovimento}.
+     */
     @Override
     public int hashCode() {
         return Objects.hash(idMovimento);
     }
 
+    /**
+     * Retorna uma representação textual estruturada da movimentação.
+     *
+     * @return String formatada com ID, carteira, data, tipo e quantidade.
+     */
     @Override
     public String toString() {
         return String.format("Movimentacao{id=%d, carteira=%d, data=%s, tipo=%s, quantidade=%s}",

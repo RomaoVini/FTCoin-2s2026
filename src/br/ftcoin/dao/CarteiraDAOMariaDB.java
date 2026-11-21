@@ -38,16 +38,27 @@ public final class CarteiraDAOMariaDB implements CarteiraDAO {
     /** Código de erro MariaDB/MySQL para violação de integridade referencial (FK em uso). */
     private static final int ERRO_FK_REFERENCIADA = 1451;
 
+    /** Comando SQL para inserir uma nova carteira. */
     private static final String INSERT =
             "INSERT INTO carteira (id_carteira, titular, corretora) VALUES (?, ?, ?)";
+
+    /** Comando SQL para atualizar titular e corretora de uma carteira existente. */
     private static final String UPDATE =
             "UPDATE carteira SET titular = ?, corretora = ? WHERE id_carteira = ?";
+
+    /** Comando SQL para excluir uma carteira pelo identificador. */
     private static final String DELETE =
             "DELETE FROM carteira WHERE id_carteira = ?";
+
+    /** Consulta SQL que busca uma carteira pelo identificador. */
     private static final String SELECT_ID =
             "SELECT id_carteira, titular, corretora FROM carteira WHERE id_carteira = ?";
+
+    /** Consulta SQL que lista todas as carteiras em ordem crescente de identificador. */
     private static final String SELECT_ALL =
             "SELECT id_carteira, titular, corretora FROM carteira ORDER BY id_carteira ASC";
+
+    /** Consulta SQL que lista todas as carteiras em ordem alfabética de titular. */
     private static final String SELECT_ALL_BY_HOLDER =
             "SELECT id_carteira, titular, corretora FROM carteira ORDER BY titular ASC";
 
@@ -182,6 +193,10 @@ public final class CarteiraDAOMariaDB implements CarteiraDAO {
 
     /**
      * Método auxiliar para evitar duplicação de código nas consultas que retornam listas de carteiras.
+     *
+     * @param sql Consulta SQL (sem parâmetros) que retorna as colunas de {@code carteira}.
+     * @return Lista de carteiras retornadas pela consulta (pode ser vazia).
+     * @throws RuntimeException se ocorrer erro de acesso ao banco de dados.
      */
     private List<Carteira> executarConsultaLista(String sql) {
         List<Carteira> lista = new ArrayList<>();
@@ -201,6 +216,10 @@ public final class CarteiraDAOMariaDB implements CarteiraDAO {
 
     /**
      * Converte a linha atual do {@link ResultSet} em uma instância de {@link Carteira}.
+     *
+     * @param rs Resultado da consulta, posicionado na linha a ser convertida.
+     * @return A {@link Carteira} correspondente à linha atual.
+     * @throws SQLException se ocorrer erro ao ler as colunas do resultado.
      */
     private Carteira mapear(ResultSet rs) throws SQLException {
         return new Carteira(

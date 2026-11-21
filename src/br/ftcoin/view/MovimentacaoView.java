@@ -22,17 +22,26 @@ import java.util.Objects;
  *
  * @author Equipe FT_Coin
  * @version 2.0
+ * @see MovimentacaoController
+ * @see Movimentacao
+ * @see TipoOperacao
  */
 public class MovimentacaoView {
 
+    /** Chaves {@link I18n} das opções numeradas exibidas no submenu de Movimentações (de 1 a 3). */
     private static final List<String> OPCOES = List.of(
             "transactionMenu.buyCoin",
             "transactionMenu.sellCoin",
             "transactionMenu.quoteCoin"
     );
 
+    /** Controlador que concentra as regras de negócio de movimentações e consulta de cotações. */
     private final MovimentacaoController controller;
+
+    /** Utilitário de console para leitura de entradas e exibição de mensagens formatadas. */
     private final ConsoleUtils console;
+
+    /** Componente de menu reutilizável usado para renderizar o submenu de Movimentações. */
     private final MenuView menu;
 
     /**
@@ -51,6 +60,10 @@ public class MovimentacaoView {
     /**
      * Exibe o loop interativo do submenu de Movimentações e direciona cada opção
      * escolhida pelo usuário para o fluxo correspondente.
+     *
+     * <p>Erros de validação e exceções de execução lançados pelo controlador são
+     * capturados e exibidos ao usuário sem encerrar o loop. O loop termina quando
+     * o usuário escolhe a opção {@code 0} (Voltar).</p>
      */
     public void exibirMenu() {
         int opcao;
@@ -76,6 +89,13 @@ public class MovimentacaoView {
         } while (opcao != 0);
     }
 
+    /**
+     * Fluxo de registro de uma operação de compra ou venda: solicita o identificador da carteira,
+     * a data (opcional, assume a data atual) e a quantidade, delega o cadastro ao controlador
+     * e exibe a movimentação registrada.
+     *
+     * @param tipo Tipo da operação a ser registrada ({@link TipoOperacao#COMPRA} ou {@link TipoOperacao#VENDA}).
+     */
     private void registrarOperacao(TipoOperacao tipo) {
         int idCarteira = console.lerInteiro(I18n.get("walletView.prompt.id"));
         LocalDate data = lerDataOpcional(I18n.get("transactionView.prompt.date"));
@@ -90,6 +110,10 @@ public class MovimentacaoView {
         System.out.println(formatar(m));
     }
 
+    /**
+     * Fluxo de consulta de cotação: solicita uma data (opcional, assume a data atual),
+     * consulta o Oráculo através do controlador e exibe a data e o valor da cotação.
+     */
     private void consultarCotacao() {
         LocalDate data = lerDataOpcional(I18n.get("transactionView.prompt.quoteDate"));
         Cotacao cotacao = controller.consultarCotacao(data);
@@ -99,6 +123,13 @@ public class MovimentacaoView {
         System.out.println(I18n.get("report.oracle.display.price") + " R$ " + cotacao.getValor());
     }
 
+    /**
+     * Solicita e lê um número decimal obrigatório, aceitando vírgula ou ponto como separador.
+     * O prompt é repetido até que um valor válido seja informado.
+     *
+     * @param prompt Texto de instrução exibido antes da leitura.
+     * @return Valor decimal convertido.
+     */
     private BigDecimal lerDecimal(String prompt) {
         while (true) {
             String entrada = console.lerString(prompt);
@@ -110,6 +141,14 @@ public class MovimentacaoView {
         }
     }
 
+    /**
+     * Solicita e lê uma data opcional no formato ISO ({@code yyyy-MM-dd}).
+     * Se o usuário apenas pressionar ENTER, a data atual é utilizada.
+     * O prompt é repetido enquanto o formato informado for inválido.
+     *
+     * @param prompt Texto de instrução exibido antes da leitura.
+     * @return Data informada pelo usuário ou {@link LocalDate#now()} se a entrada for vazia.
+     */
     private LocalDate lerDataOpcional(String prompt) {
         while (true) {
             String entrada = console.lerStringOpcional(prompt);
@@ -124,6 +163,12 @@ public class MovimentacaoView {
         }
     }
 
+    /**
+     * Formata uma {@link Movimentacao} em uma linha de texto no idioma ativo.
+     *
+     * @param m Movimentação a ser formatada.
+     * @return Texto contendo identificador do movimento, carteira, data, tipo da operação e quantidade.
+     */
     private static String formatar(Movimentacao m) {
         return I18n.getComParametros("transactionView.item",
                 String.valueOf(m.getIdMovimento()),

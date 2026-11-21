@@ -8,11 +8,16 @@ import java.util.Objects;
  * Interface de linha de comando (CLI) responsável por renderizar as instruções
  * de uso e os créditos da equipe do sistema FT_Coin.
  *
+ * <p>Todos os textos exibidos são obtidos via {@link I18n}, respeitando o idioma
+ * ativo na aplicação.</p>
+ *
  * @author Equipe FT_Coin
  * @version 2.0
+ * @see ConsoleUtils
  */
 public class AjudaView {
 
+    /** Utilitário de console usado para formatação e pausa da tela de ajuda. */
     private final ConsoleUtils consoleUtils;
 
     /**

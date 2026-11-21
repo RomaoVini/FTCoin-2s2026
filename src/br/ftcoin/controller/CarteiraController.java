@@ -20,7 +20,10 @@ import java.util.Objects;
  */
 public class CarteiraController {
 
+    /** Repositório de acesso a dados das carteiras. */
     private final CarteiraDAO dao;
+
+    /** View do submenu de carteiras; permanece {@code null} quando o controlador é usado sem CLI (ex.: testes). */
     private CarteiraView view;
 
     /**
@@ -152,17 +155,37 @@ public class CarteiraController {
         return dao.consultarTodos();
     }
 
+    /**
+     * Consulta uma carteira no DAO e falha caso ela não exista.
+     *
+     * @param id Identificador da carteira.
+     * @return A carteira encontrada.
+     * @throws ValidacaoException se não houver carteira com o identificador informado.
+     */
     private Carteira buscarOuFalhar(int id) {
         return dao.consultar(id).orElseThrow(() ->
                 new ValidacaoException("wallet.error.notFound", String.valueOf(id)));
     }
 
+    /**
+     * Garante que o identificador da carteira seja estritamente positivo.
+     *
+     * @param id Identificador a ser validado.
+     * @throws ValidacaoException se {@code id} for menor ou igual a zero.
+     */
     private static void validarId(int id) {
         if (id <= 0) {
             throw new ValidacaoException("wallet.error.invalidId", String.valueOf(id));
         }
     }
 
+    /**
+     * Garante que um campo textual obrigatório não seja nulo nem esteja em branco.
+     *
+     * @param valor     Texto a ser validado.
+     * @param chaveErro Chave de internacionalização da mensagem de erro a ser lançada.
+     * @throws ValidacaoException se {@code valor} for nulo ou em branco.
+     */
     private static void validarTexto(String valor, String chaveErro) {
         if (valor == null || valor.isBlank()) {
             throw new ValidacaoException(chaveErro);

@@ -14,6 +14,7 @@ import java.util.Scanner;
  *
  * @author Equipe FT_Coin
  * @version 2.0
+ * @see MenuView
  */
 public class ConsoleUtils {
 
@@ -35,6 +36,7 @@ public class ConsoleUtils {
     /** Código ANSI para texto em negrito (títulos e cabeçalhos). */
     public static final String NEGRITO = "\u001B[1m";
 
+    /** Leitor da entrada padrão compartilhado por toda a aplicação. */
     private final Scanner scanner;
 
     /**
@@ -70,7 +72,7 @@ public class ConsoleUtils {
      * (por exemplo, quando pressionar ENTER assume um valor padrão como a data atual).
      *
      * @param mensagemPrompt Texto de instrução exibido antes da leitura.
-     * @return Texto informado pelo usuário (pode ser string vazia {@code ""}).
+     * @return Texto informado pelo usuário, sem espaços nas extremidades (pode ser string vazia {@code ""}).
      */
     public String lerStringOpcional(String mensagemPrompt) {
         System.out.print(mensagemPrompt + " ");
@@ -79,7 +81,7 @@ public class ConsoleUtils {
 
     /**
      * Solicita e lê um número inteiro válido do console, tratando entradas não numéricas
-     * sem interromper a execução do programa.
+     * sem interromper a execução do programa. O prompt é repetido até que um inteiro válido seja informado.
      *
      * @param mensagemPrompt Texto de instrução exibido antes da leitura.
      * @return Valor inteiro convertido.

@@ -16,7 +16,11 @@ import java.util.TreeMap;
  * identificadores são atribuídos automaticamente quando necessário.</p>
  */
 public final class MovimentacaoDAOMemoria implements MovimentacaoDAO {
+
+    /** Armazenamento das movimentações, indexadas pelo identificador e mantidas em ordem crescente de ID. */
     private final Map<Integer, Movimentacao> armazenamento = new TreeMap<>();
+
+    /** Próximo identificador a ser atribuído (simula o {@code AUTO_INCREMENT} do banco). */
     private int proximoId = 1;
 
     /**

@@ -23,15 +23,28 @@ import java.util.Scanner;
  */
 public class AppController {
 
+    /** View responsável por exibir menus e capturar a opção escolhida. */
     private final MenuView menuView;
+
+    /** Utilitário central de entrada/saída e formatação da interface de linha de comando. */
     private final ConsoleUtils consoleUtils;
+
+    /** Modo de persistência ativo, em maiúsculas ({@code "MEMORIA"} ou {@code "MARIADB"}). */
     private final String tipoPersistencia;
 
+    /** Sub-controlador das operações de carteira. */
     private final CarteiraController carteiraController;
+
+    /** Sub-controlador das operações de movimentação (compra, venda e cotação). */
     private final MovimentacaoController movimentacaoController;
+
+    /** Sub-controlador dos relatórios. */
     private final RelatorioController relatorioController;
+
+    /** Sub-controlador da ajuda e créditos. */
     private final AjudaController ajudaController;
 
+    /** Indica se o loop do menu principal deve continuar em execução. */
     private boolean executando;
 
     /**

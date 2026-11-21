@@ -15,9 +15,11 @@ import java.util.Scanner;
  *
  * @author Equipe FT_Coin
  * @version 2.0
+ * @see ConsoleUtils
  */
 public class MenuView {
 
+    /** Utilitário de console usado para leitura da opção e exibição de mensagens de erro. */
     private final ConsoleUtils consoleUtils;
 
     /**
@@ -45,9 +47,13 @@ public class MenuView {
      * Renderiza o cabeçalho do menu, lista as opções numeradas dinamicamente (de 1 a N),
      * exibe a opção {@code 0} (Sair ou Voltar) e solicita uma escolha válida ao usuário.
      *
+     * <p>Se o usuário digitar um número fora do intervalo permitido, uma mensagem de erro
+     * é exibida e o menu é renderizado novamente.</p>
+     *
      * @param chaveTitulo  Chave mapeada no {@link I18n} para o título do menu.
      * @param chavesOpcoes Lista ordenada com as chaves {@link I18n} das opções numeradas.
      * @return Número inteiro da opção selecionada ({@code 1} a {@code N}, ou {@code 0} para Sair/Voltar).
+     * @throws NullPointerException se {@code chavesOpcoes} for nula.
      */
     public int exibirEObterOpcao(String chaveTitulo, List<String> chavesOpcoes) {
         Objects.requireNonNull(chavesOpcoes, () -> I18n.get("menu.error.nullOptions"));

@@ -17,9 +17,12 @@ import java.util.Objects;
  *
  * @author Equipe FT_Coin
  * @version 2.0
+ * @see CarteiraController
+ * @see Carteira
  */
 public class CarteiraView {
 
+    /** Chaves {@link I18n} das opções numeradas exibidas no submenu de Carteiras (de 1 a 4). */
     private static final List<String> OPCOES = List.of(
             "walletView.option.register",
             "walletView.option.list",
@@ -27,8 +30,13 @@ public class CarteiraView {
             "walletView.option.delete"
     );
 
+    /** Controlador que concentra as regras de negócio e a persistência de carteiras. */
     private final CarteiraController controller;
+
+    /** Utilitário de console para leitura de entradas e exibição de mensagens formatadas. */
     private final ConsoleUtils console;
+
+    /** Componente de menu reutilizável usado para renderizar o submenu de Carteiras. */
     private final MenuView menu;
 
     /**
@@ -47,6 +55,10 @@ public class CarteiraView {
     /**
      * Exibe o loop interativo do submenu de Carteiras e direciona cada opção
      * escolhida pelo usuário para o fluxo correspondente.
+     *
+     * <p>Erros de validação e exceções de execução lançados pelo controlador são
+     * capturados e exibidos ao usuário sem encerrar o loop. O loop termina quando
+     * o usuário escolhe a opção {@code 0} (Voltar).</p>
      */
     public void exibirMenu() {
         int opcao;
@@ -73,6 +85,10 @@ public class CarteiraView {
         } while (opcao != 0);
     }
 
+    /**
+     * Fluxo de cadastro: solicita identificador, titular e corretora, delega o registro
+     * ao controlador e exibe a carteira cadastrada.
+     */
     private void cadastrar() {
         int id = console.lerInteiro(I18n.get("walletView.prompt.id"));
         String titular = console.lerString(I18n.get("walletView.prompt.holder"));
@@ -83,6 +99,10 @@ public class CarteiraView {
         System.out.println(formatar(carteira));
     }
 
+    /**
+     * Fluxo de listagem: exibe todas as carteiras cadastradas ou um alerta
+     * caso não exista nenhuma.
+     */
     private void listar() {
         List<Carteira> carteiras = controller.listarTodas();
         if (carteiras.isEmpty()) {
@@ -92,6 +112,10 @@ public class CarteiraView {
         carteiras.forEach(c -> System.out.println(formatar(c)));
     }
 
+    /**
+     * Fluxo de edição: localiza a carteira pelo identificador, mostra seus dados atuais,
+     * solicita novo titular e nova corretora e delega a atualização ao controlador.
+     */
     private void atualizar() {
         int id = console.lerInteiro(I18n.get("walletView.prompt.id"));
         Carteira atual = controller.buscarPorId(id);
@@ -105,6 +129,10 @@ public class CarteiraView {
         System.out.println(formatar(atualizada));
     }
 
+    /**
+     * Fluxo de exclusão: localiza a carteira, pede confirmação explícita ao usuário
+     * e só então delega a remoção ao controlador. Caso não confirme, a operação é cancelada.
+     */
     private void excluir() {
         int id = console.lerInteiro(I18n.get("walletView.prompt.id"));
         Carteira carteira = controller.buscarPorId(id);
@@ -121,6 +149,14 @@ public class CarteiraView {
         }
     }
 
+    /**
+     * Interpreta a resposta do usuário a uma pergunta de confirmação (sim/não),
+     * aceitando variações em português, inglês e espanhol, sem diferenciar maiúsculas de minúsculas.
+     *
+     * @param resposta Texto digitado pelo usuário (pode ser nulo).
+     * @return {@code true} se a resposta for afirmativa (ex.: "s", "sim", "y", "yes", "si", "sí");
+     *         {@code false} caso contrário ou se for nula.
+     */
     private static boolean confirmou(String resposta) {
         if (resposta == null) {
             return false;
@@ -130,6 +166,12 @@ public class CarteiraView {
                 || r.equals("yes") || r.equals("si") || r.equals("sí");
     }
 
+    /**
+     * Formata uma {@link Carteira} em uma linha de texto no idioma ativo.
+     *
+     * @param c Carteira a ser formatada.
+     * @return Texto contendo identificador, titular e corretora da carteira.
+     */
     private static String formatar(Carteira c) {
         return I18n.getComParametros("walletView.item",
                 String.valueOf(c.getId()), c.getTitular(), c.getCorretora());
