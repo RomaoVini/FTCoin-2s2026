@@ -26,6 +26,7 @@ public final class Main {
      * @param args Argumentos opcionais de linha de comando (ex: {@code "MEMORIA"} ou {@code "MARIADB"}).
      */
     public static void main(String[] args) {
+        
         String persistenciaInicial = (args != null && args.length > 0) ? args[0] : "MEMORIA";
         AppController app = new AppController(persistenciaInicial);
         app.iniciar();
