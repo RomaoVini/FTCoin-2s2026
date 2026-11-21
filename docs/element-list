@@ -1,0 +1,12 @@
+br.ftcoin
+br.ftcoin.client
+br.ftcoin.controller
+br.ftcoin.dao
+br.ftcoin.dto
+br.ftcoin.enums
+br.ftcoin.exception
+br.ftcoin.model
+br.ftcoin.network
+br.ftcoin.service
+br.ftcoin.util
+br.ftcoin.view
