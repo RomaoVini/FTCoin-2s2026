@@ -2,6 +2,7 @@ package br.ftcoin.controller;
 
 import br.ftcoin.dao.DAOFactory;
 import br.ftcoin.enums.Idioma;
+import br.ftcoin.enums.MenuOperacao;
 import br.ftcoin.service.OraculoCotacao;
 import br.ftcoin.service.OraculoService;
 import br.ftcoin.util.DatabaseConnection;
@@ -38,11 +39,11 @@ public class AppController {
      * Inicializa a aplicação configurando a interface CLI, a fábrica de DAOs
      * conforme o modo de persistência e injetando as dependências nos sub-controllers.
      *
-     * @param tipoPersistencia Tipo de armazenamento ("MEMORIA" ou "MARIADB") informado na CLI.
+     * @param tipoPersistencia Tipo de armazenamento ({@code "MEMORIA"} ou {@code "MARIADB"}) informado na CLI.
      */
     public AppController(String tipoPersistencia) {
         this.tipoPersistencia = (tipoPersistencia != null) ? tipoPersistencia.toUpperCase() : "MEMORIA";
-        
+
         Scanner scanner = new Scanner(System.in);
         this.consoleUtils = new ConsoleUtils(scanner);
         this.menuView = new MenuView(consoleUtils);
@@ -54,15 +55,15 @@ public class AppController {
         // Injeta os DAOs, o serviço de cotações e as Views nos controladores de domínio
         this.carteiraController = new CarteiraController(menuView, daoFactory.getCarteiraDAO());
         this.movimentacaoController = new MovimentacaoController(
-                menuView, 
-                daoFactory.getCarteiraDAO(), 
-                daoFactory.getMovimentacaoDAO(), 
+                menuView,
+                daoFactory.getCarteiraDAO(),
+                daoFactory.getMovimentacaoDAO(),
                 oraculo
         );
         this.relatorioController = new RelatorioController(
-                menuView, 
-                daoFactory.getCarteiraDAO(), 
-                daoFactory.getMovimentacaoDAO(), 
+                menuView,
+                daoFactory.getCarteiraDAO(),
+                daoFactory.getMovimentacaoDAO(),
                 oraculo
         );
         this.ajudaController = new AjudaController(consoleUtils);
@@ -87,29 +88,20 @@ public class AppController {
      * para o sub-controller correspondente à escolha do usuário.
      */
     private void exibirEProcessarMenuPrincipal() {
-        List<String> opcoes = List.of(
-            "mainMenu.wallet",       // 1. Carteira
-            "mainMenu.transaction",  // 2. Movimentação
-            "mainMenu.reports",      // 3. Relatórios
-            "mainMenu.help",         // 4. Ajuda
-            "mainMenu.language"      // 5. Idioma
+        int escolha = menuView.exibirEObterOpcao(
+                "mainMenu.title",
+                MenuOperacao.obterChavesMenuPrincipal()
         );
 
-        int escolha = menuView.exibirEObterOpcao("mainMenu.title", opcoes);
+        MenuOperacao operacao = MenuOperacao.fromCodigo(escolha);
 
-        // Guard Clause para saída imediata (Opção 0: Sair)
-        if (escolha == 0) {
-            this.executando = false;
-            return;
-        }
-
-        switch (escolha) {
-            case 1 -> carteiraController.exibirMenuCarteira();
-            case 2 -> movimentacaoController.exibirMenuMovimentacao();
-            case 3 -> relatorioController.exibirMenuRelatorios();
-            case 4 -> ajudaController.exibirMenuAjuda();
-            case 5 -> alterarIdioma();
-            default -> consoleUtils.exibirErro(I18n.get("generic.confirmInvalid"));
+        switch (operacao) {
+            case CARTEIRA     -> carteiraController.exibirMenuCarteira();
+            case MOVIMENTACAO -> movimentacaoController.exibirMenuMovimentacao();
+            case RELATORIOS   -> relatorioController.exibirMenuRelatorios();
+            case AJUDA        -> ajudaController.exibirMenuAjuda();
+            case IDIOMA       -> alterarIdioma();
+            case SAIR         -> this.executando = false;
         }
     }
 
@@ -119,9 +111,9 @@ public class AppController {
      */
     private void alterarIdioma() {
         List<String> opcoesIdioma = List.of(
-            "languageMenu.pt", // 1. Português
-            "languageMenu.en", // 2. Inglês
-            "languageMenu.es"  // 3. Espanhol
+                "languageMenu.pt", // 1. Português
+                "languageMenu.en", // 2. Inglês
+                "languageMenu.es"  // 3. Espanhol
         );
 
         int escolha = menuView.exibirEObterOpcao("language.title", opcoesIdioma);
