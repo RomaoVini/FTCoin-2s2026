@@ -10,8 +10,8 @@ package br.ftcoin.dao;
  */
 public class MemoriaDAOFactory extends DAOFactory {
 
-    private final CarteiraDAO carteiraDAO = new CarteiraDAOMemoria();
     private final MovimentacaoDAO movimentacaoDAO = new MovimentacaoDAOMemoria();
+    private final CarteiraDAO carteiraDAO = new CarteiraDAOMemoria(movimentacaoDAO);
 
     /**
      * {@inheritDoc}

@@ -1,12 +1,19 @@
 package test;
 
 import br.ftcoin.dao.CarteiraDAOMemoria;
+import br.ftcoin.dao.CarteiraDAO;
+import br.ftcoin.dao.DAOFactory;
+import br.ftcoin.dao.MovimentacaoDAO;
 import br.ftcoin.exception.ValidacaoException;
+import br.ftcoin.enums.TipoOperacao;
 import br.ftcoin.model.Carteira;
+import br.ftcoin.model.Movimentacao;
 import br.ftcoin.controller.CarteiraController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -103,6 +110,22 @@ class CarteiraControllerTest {
 
         assertThrows(ValidacaoException.class, () -> controller.excluir(5));
         assertEquals(1, controller.listarTodas().size());
+    }
+
+    @Test
+    void exclusaoDeCarteiraComMovimentacoesEhBloqueada() {
+        DAOFactory fabrica = DAOFactory.getFactory(DAOFactory.TIPO_MEMORIA);
+        CarteiraDAO carteiras = fabrica.getCarteiraDAO();
+        MovimentacaoDAO movimentacoes = fabrica.getMovimentacaoDAO();
+        CarteiraController controller = new CarteiraController(carteiras);
+
+        controller.cadastrar(1, "Ana", "X");
+        movimentacoes.incluir(new Movimentacao(
+                1, LocalDate.of(2026, 2, 1), TipoOperacao.COMPRA, BigDecimal.TEN));
+
+        assertThrows(ValidacaoException.class, () -> controller.excluir(1));
+        assertTrue(carteiras.consultar(1).isPresent());
+        assertEquals(1, movimentacoes.consultarPorCarteira(1).size());
     }
 
     @Test

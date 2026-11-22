@@ -9,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -23,6 +24,27 @@ public final class CarteiraDAOMemoria implements CarteiraDAO {
 
     /** Armazenamento das carteiras em memória, indexadas pelo identificador e mantidas na ordem de inclusão. */
     private final Map<Integer, Carteira> carteiras = new LinkedHashMap<>();
+
+    /** Repositório compartilhado das movimentações vinculadas às carteiras. */
+    private final MovimentacaoDAO movimentacaoDAO;
+
+    /**
+     * Cria um DAO de carteiras independente, sem movimentações associadas.
+     */
+    public CarteiraDAOMemoria() {
+        this(new MovimentacaoDAOMemoria());
+    }
+
+    /**
+     * Cria um DAO de carteiras associado ao repositório de movimentações informado.
+     *
+     * @param movimentacaoDAO repositório que contém o histórico das carteiras
+     * @throws NullPointerException se {@code movimentacaoDAO} for nulo
+     */
+    public CarteiraDAOMemoria(MovimentacaoDAO movimentacaoDAO) {
+        this.movimentacaoDAO = Objects.requireNonNull(
+                movimentacaoDAO, "MovimentacaoDAO não pode ser nulo.");
+    }
 
     /**
      * {@inheritDoc}
@@ -108,6 +130,7 @@ public final class CarteiraDAOMemoria implements CarteiraDAO {
      *
      * @throws IllegalArgumentException se o {@code id} informado for nulo.
      * @throws NoSuchElementException   se a carteira não existir no mapa em memória.
+     * @throws IllegalStateException    se a carteira possuir movimentações vinculadas.
      */
     @Override
     public void excluir(Integer id) {
@@ -118,6 +141,11 @@ public final class CarteiraDAOMemoria implements CarteiraDAO {
         if (!carteiras.containsKey(id)) {
             throw new NoSuchElementException(
                     I18n.getComParametros("wallet.error.notFound", String.valueOf(id)));
+        }
+
+        if (!movimentacaoDAO.consultarPorCarteira(id).isEmpty()) {
+            throw new IllegalStateException(
+                    I18n.getComParametros("wallet.error.hasTransactions", String.valueOf(id)));
         }
 
         carteiras.remove(id);
