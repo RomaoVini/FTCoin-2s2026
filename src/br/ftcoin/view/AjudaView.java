@@ -2,22 +2,23 @@ package br.ftcoin.view;
 
 import br.ftcoin.util.I18n;
 
+import java.time.LocalDateTime;
+import java.time.Year;
+import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 
 /**
  * Interface de linha de comando (CLI) responsável por renderizar as instruções
- * de uso e os créditos da equipe do sistema FT_Coin.
- *
- * <p>Todos os textos exibidos são obtidos via {@link I18n}, respeitando o idioma
- * ativo na aplicação.</p>
+ * de uso, os créditos da equipe, copyright e data de acesso do sistema FT_Coin.
  *
  * @author Equipe FT_Coin
  * @version 2.0
- * @see ConsoleUtils
  */
 public class AjudaView {
 
-    /** Utilitário de console usado para formatação e pausa da tela de ajuda. */
+    private static final DateTimeFormatter FORMATO_DATA_ACESSO =
+            DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+
     private final ConsoleUtils consoleUtils;
 
     /**
@@ -31,8 +32,8 @@ public class AjudaView {
     }
 
     /**
-     * Renderiza o manual resumido de operações (Carteira, Movimentação e Relatórios),
-     * dicas de uso e os créditos do projeto no idioma ativo, aguardando confirmação para retornar.
+     * Renderiza o manual resumido de operações, dicas de uso, créditos completos
+     * da equipe, copyright e data de acesso no idioma ativo.
      */
     public void exibirAjudaECreditos() {
         System.out.println();
@@ -46,8 +47,19 @@ public class AjudaView {
         System.out.println();
 
         System.out.println(ConsoleUtils.NEGRITO + ConsoleUtils.AZUL + I18n.get("help.credits.header") + ConsoleUtils.RESET);
-        System.out.println("  " + I18n.get("help.credits.team"));
-        System.out.println("  " + I18n.get("help.credits.version"));
+        System.out.println("  " + ConsoleUtils.NEGRITO + I18n.get("help.credits.team") + ConsoleUtils.RESET
+                + " (" + I18n.get("help.credits.version") + ")");
+        System.out.println("  • " + I18n.get("help.credits.role.sm"));
+        System.out.println("  • " + I18n.get("help.credits.role.po"));
+        System.out.println("  • " + I18n.get("help.credits.role.reports"));
+        System.out.println("  • " + I18n.get("help.credits.role.wallet"));
+        System.out.println("  • " + I18n.get("help.credits.role.transactionPersistence"));
+        System.out.println("  • " + I18n.get("help.credits.role.documentation"));
+        System.out.println();
+
+        String dataHoraAtual = LocalDateTime.now().format(FORMATO_DATA_ACESSO);
+        System.out.println("  " + I18n.get("help.credits.accessDate") + " " + dataHoraAtual);
+        System.out.println("  " + I18n.getComParametros("help.credits.copyright", String.valueOf(Year.now().getValue())));
         System.out.println();
 
         consoleUtils.pausar();
