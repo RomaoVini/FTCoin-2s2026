@@ -3,6 +3,7 @@ package br.ftcoin.util;
 import br.ftcoin.enums.Idioma;
 
 import java.text.MessageFormat;
+import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
@@ -10,9 +11,9 @@ import java.util.ResourceBundle;
  * Classe utilitária responsável pelo gerenciamento centralizado de internacionalização (I18n)
  * do sistema FT_Coin.
  *
- * <p>Controla o {@link ResourceBundle} ativo em memória, permite a alternância dinâmica
- * entre os idiomas suportados ({@link Idioma}) e fornece recuperação segura de mensagens
- * simples ou parametrizadas.</p>
+ * <p>Controla o {@link ResourceBundle} ativo em memória, detecta automaticamente o
+ * {@link Locale#getDefault()} na inicialização, permite a alternância dinâmica entre os
+ * idiomas suportados ({@link Idioma}) e fornece recuperação segura de mensagens.</p>
  *
  * @author Equipe FT_Coin
  * @version 2.0
@@ -24,8 +25,8 @@ public final class I18n {
     private static Idioma idiomaAtual;
 
     static {
-        // Define o idioma padrão do sistema na inicialização
-        setIdioma(Idioma.PORTUGUES);
+        // Detecta automaticamente o Locale padrão da JVM / Sistema Operacional
+        setIdioma(Idioma.fromLocale(Locale.getDefault()));
     }
 
     /**
@@ -35,16 +36,17 @@ public final class I18n {
     }
 
     /**
-     * Altera o idioma ativo do sistema e recarrega o arquivo de propriedades
-     * ({@code messages_*.properties}) correspondente.
+     * Altera o idioma ativo do sistema, atualiza o {@link Locale} padrão da JVM
+     * e recarrega o arquivo de propriedades ({@code messages_*.properties}) correspondente.
      *
-     * @param novoIdioma Enum representando o idioma desejado (se nulo, assume {@link Idioma#PORTUGUES}).
+     * @param novoIdioma Enum representando o idioma desejado (se nulo, detecta via {@link Locale#getDefault()}).
      */
     public static synchronized void setIdioma(Idioma novoIdioma) {
         if (novoIdioma == null) {
-            novoIdioma = Idioma.PORTUGUES;
+            novoIdioma = Idioma.fromLocale(Locale.getDefault());
         }
         idiomaAtual = novoIdioma;
+        Locale.setDefault(novoIdioma.getLocale());
         bundle = ResourceBundle.getBundle(BUNDLE_NAME, novoIdioma.getLocale());
     }
 

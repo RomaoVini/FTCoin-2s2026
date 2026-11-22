@@ -3,24 +3,35 @@
     "configurations": [
         {
             "type": "java",
-            "name": "FT_Coin (Memória)",
+            "name": "FT_Coin - Português (Memória)",
             "request": "launch",
             "mainClass": "br.ftcoin.Main",
             "args": ["MEMORIA"],
-            "vmArgs": "-Dfile.encoding=UTF-8"
+            "vmArgs": "-Dfile.encoding=UTF-8 -Duser.language=pt -Duser.country=BR"
         },
         {
             "type": "java",
-            "name": "FT_Coin (MariaDB)",
+            "name": "FT_Coin - English (Memória)",
+            "request": "launch",
+            "mainClass": "br.ftcoin.Main",
+            "args": ["MEMORIA"],
+            "vmArgs": "-Dfile.encoding=UTF-8 -Duser.language=en -Duser.country=US"
+        },
+        {
+            "type": "java",
+            "name": "FT_Coin - Español (Memória)",
+            "request": "launch",
+            "mainClass": "br.ftcoin.Main",
+            "args": ["MEMORIA"],
+            "vmArgs": "-Dfile.encoding=UTF-8 -Duser.language=es -Duser.country=ES"
+        },
+        {
+            "type": "java",
+            "name": "FT_Coin - MariaDB (Remoto)",
             "request": "launch",
             "mainClass": "br.ftcoin.Main",
             "args": ["MARIADB"],
-            "vmArgs": "-Dfile.encoding=UTF-8",
-            "env": {
-                "MARIADB_USER": "POO2_2s26_A02",
-                "MARIADB_PASSWORD": "W90OL8wsC8"
-            }
+            "vmArgs": "-Dfile.encoding=UTF-8 -Duser.language=pt -Duser.country=BR"
         }
-        
     ]
 }

@@ -72,6 +72,24 @@ public enum Idioma {
     }
 
     /**
+     * Resolve o {@link Idioma} correspondente a um {@link Locale} (como {@link Locale#getDefault()}).
+     * Caso o idioma do sistema não seja suportado, retorna {@link #PORTUGUES} como padrão.
+     *
+     * @param locale Localidade de referência.
+     * @return Instância de {@link Idioma} compatível.
+     */
+    public static Idioma fromLocale(Locale locale) {
+        if (locale == null) {
+            return PORTUGUES;
+        }
+        return switch (locale.getLanguage().toLowerCase()) {
+            case "en" -> INGLES;
+            case "es" -> ESPANHOL;
+            default -> PORTUGUES;
+        };
+    }
+
+    /**
      * Converte a opção numérica selecionada no menu de idiomas para o enum correspondente.
      *
      * @param opcao Número escolhido pelo usuário (1: Português, 2: Inglês, 3: Espanhol).
