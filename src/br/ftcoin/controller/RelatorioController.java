@@ -11,6 +11,7 @@ import br.ftcoin.model.Movimentacao;
 import br.ftcoin.service.CalculoFinanceiroService;
 import br.ftcoin.service.OraculoCotacao;
 import br.ftcoin.service.OraculoException;
+import br.ftcoin.util.I18n;
 import br.ftcoin.view.MenuView;
 import br.ftcoin.view.RelatorioView;
 
@@ -30,35 +31,19 @@ import java.util.Objects;
  *
  * <p>Orquestra as camadas do padrão MVC: busca os dados nos DAOs, aciona o
  * Model ({@link CarteiraFinanceira} e {@link CalculoFinanceiroService}) para
- * os cálculos e entrega à {@link RelatorioView} dados já formatados em
- * {@link RelatorioCarteiraDTO}. Este controlador não realiza cálculos de
- * negócio: apenas ordena, orquestra e formata.</p>
+ * os cálculos e entrega à {@link RelatorioView} dados já formatados conforme o
+ * idioma ativo em {@link RelatorioCarteiraDTO}.</p>
  *
  * @author Equipe FT_Coin
- * @version 1.0
+ * @version 2.0
  * @see RelatorioView
  * @see RelatorioCarteiraDTO
  */
 public final class RelatorioController {
 
-    /** Localidade usada na formatação de moeda e na ordenação alfabética (português do Brasil). */
-    private static final Locale PT_BR = Locale.forLanguageTag("pt-BR");
-
-    /** Formato de data exibido nos relatórios ({@code dd/MM/yyyy}). */
-    private static final DateTimeFormatter FORMATO_DATA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
     /** Critério de ordenação das carteiras por identificador crescente. */
     private static final Comparator<Carteira> POR_ID =
             Comparator.comparingInt(Carteira::getId);
-
-    /**
-     * Critério de ordenação das carteiras pelo nome do titular, ignorando acentos
-     * e maiúsculas; o identificador desempata nomes repetidos.
-     */
-    // PRIMARY ignora acento e maiúscula; o id desempata nomes repetidos
-    private static final Comparator<Carteira> POR_TITULAR =
-            Comparator.comparing(Carteira::getTitular, criarCollator())
-                      .thenComparingInt(Carteira::getId);
 
     /** Acesso aos dados das carteiras. */
     private final CarteiraDAO carteiraDAO;
@@ -81,18 +66,18 @@ public final class RelatorioController {
     /**
      * Cria o controlador e a View de relatórios associada a ele.
      *
-     * @param menuView        view de menus, da qual se reaproveita o console
-     * @param carteiraDAO     acesso aos dados das carteiras
-     * @param movimentacaoDAO acesso aos dados das movimentações
-     * @param oraculo         fonte de cotações da FTCoin
-     * @throws NullPointerException se algum argumento for nulo
+     * @param menuView        View de menus, da qual se reaproveita o console.
+     * @param carteiraDAO     Acesso aos dados das carteiras.
+     * @param movimentacaoDAO Acesso aos dados das movimentações.
+     * @param oraculo         Fonte de cotações da FTCoin.
+     * @throws NullPointerException se algum argumento for nulo.
      */
     public RelatorioController(MenuView menuView, CarteiraDAO carteiraDAO,
                                MovimentacaoDAO movimentacaoDAO, OraculoCotacao oraculo) {
-        Objects.requireNonNull(menuView, "MenuView não pode ser nula.");
-        this.carteiraDAO = Objects.requireNonNull(carteiraDAO, "CarteiraDAO não pode ser nulo.");
-        this.movimentacaoDAO = Objects.requireNonNull(movimentacaoDAO, "MovimentacaoDAO não pode ser nulo.");
-        this.oraculo = Objects.requireNonNull(oraculo, "Oráculo não pode ser nulo.");
+        Objects.requireNonNull(menuView, () -> I18n.get("generic.error.nullParameter"));
+        this.carteiraDAO = Objects.requireNonNull(carteiraDAO, () -> I18n.get("generic.error.nullParameter"));
+        this.movimentacaoDAO = Objects.requireNonNull(movimentacaoDAO, () -> I18n.get("generic.error.nullParameter"));
+        this.oraculo = Objects.requireNonNull(oraculo, () -> I18n.get("generic.error.nullParameter"));
         this.calculo = new CalculoFinanceiroService(this.oraculo);
         this.view = new RelatorioView(menuView.getConsoleUtils(), this);
     }
@@ -109,29 +94,31 @@ public final class RelatorioController {
     /**
      * Lista as carteiras cadastradas em ordem numérica crescente de identificador.
      *
-     * @return nova lista ordenada (vazia se não houver carteiras)
+     * @return Nova lista ordenada (vazia se não houver carteiras).
      */
     public List<Carteira> listarCarteirasPorId() {
         return ordenar(POR_ID);
     }
 
     /**
-     * Lista as carteiras cadastradas em ordem alfabética do nome do titular.
-     * A comparação ignora acentos e maiúsculas, e o identificador desempata
-     * nomes repetidos.
+     * Lista as carteiras cadastradas em ordem alfabética do nome do titular
+     * respeitando as regras de colação do {@link Locale} ativo.
      *
-     * @return nova lista ordenada (vazia se não houver carteiras)
+     * @return Nova lista ordenada (vazia se não houver carteiras).
      */
     public List<Carteira> listarCarteirasPorTitular() {
-        return ordenar(POR_TITULAR);
+        Comparator<Carteira> porTitularDinamico =
+                Comparator.comparing(Carteira::getTitular, criarCollator())
+                          .thenComparingInt(Carteira::getId);
+        return ordenar(porTitularDinamico);
     }
 
     /**
      * Obtém todas as carteiras do DAO e as ordena segundo o critério informado,
      * sem alterar a coleção original.
      *
-     * @param criterio comparador que define a ordem das carteiras
-     * @return nova lista ordenada (vazia se não houver carteiras)
+     * @param criterio Comparador que define a ordem das carteiras.
+     * @return Nova lista ordenada (vazia se não houver carteiras).
      */
     private List<Carteira> ordenar(Comparator<Carteira> criterio) {
         List<Carteira> lista = new ArrayList<>(carteiraDAO.consultarTodos());
@@ -143,13 +130,12 @@ public final class RelatorioController {
 
     /**
      * Gera o relatório de saldo atual de uma carteira: quantidade de FTCoins
-     * e valor a custo médio. Uma carteira sem movimentações tem saldo zero e
-     * não consulta o Oráculo.
+     * e valor a custo médio, formatados no idioma ativo.
      *
-     * @param idCarteira identificador da carteira
-     * @return saldo atual já formatado
-     * @throws ValidacaoException se a carteira não existir
-     * @throws OraculoException   se o Oráculo falhar ao fornecer as cotações históricas
+     * @param idCarteira Identificador da carteira.
+     * @return Saldo atual já formatado.
+     * @throws ValidacaoException se a carteira não existir.
+     * @throws OraculoException   se o Oráculo falhar ao fornecer as cotações históricas.
      */
     public RelatorioCarteiraDTO gerarSaldoAtual(int idCarteira) {
         Carteira carteira = buscarCarteira(idCarteira);
@@ -169,12 +155,12 @@ public final class RelatorioController {
 
     /**
      * Gera o histórico de movimentações (compras e vendas) de uma carteira em
-     * ordem cronológica, com a cotação da data de cada operação.
+     * ordem cronológica, com datas e cotações formatadas conforme o idioma ativo.
      *
-     * @param idCarteira identificador da carteira
-     * @return histórico formatado; a lista de movimentos é vazia se não houver operações
-     * @throws ValidacaoException se a carteira não existir
-     * @throws OraculoException   se o Oráculo falhar ao fornecer uma cotação
+     * @param idCarteira Identificador da carteira.
+     * @return Histórico formatado; a lista de movimentos é vazia se não houver operações.
+     * @throws ValidacaoException se a carteira não existir.
+     * @throws OraculoException   se o Oráculo falhar ao fornecer uma cotação.
      */
     public RelatorioCarteiraDTO.Historico gerarHistorico(int idCarteira) {
         Carteira carteira = buscarCarteira(idCarteira);
@@ -183,7 +169,7 @@ public final class RelatorioController {
         for (Movimentacao m : movimentacoesEmOrdem(idCarteira)) {
             Cotacao cotacao = oraculo.obterCotacao(m.getDataOperacao());
             linhas.add(new RelatorioCarteiraDTO.Movimento(
-                    m.getDataOperacao().format(FORMATO_DATA),
+                    formatarData(m.getDataOperacao()),
                     chaveDoTipo(m),
                     quantidade(m.getQuantidade()),
                     moeda(cotacao.getValor())));
@@ -199,13 +185,9 @@ public final class RelatorioController {
      * identificador. Cada carteira traz a apuração operação a operação e a
      * valoração a mercado pela cotação atual.
      *
-     * <p>Se o Oráculo estiver indisponível, usa a última cotação atual obtida
-     * com sucesso e sinaliza o fato em
-     * {@link RelatorioCarteiraDTO.GanhoPerda#cotacaoDesatualizada()}.</p>
-     *
-     * @return um relatório por carteira
-     * @throws ValidacaoException se não houver carteiras cadastradas
-     * @throws OraculoException   se o Oráculo falhar e não houver cotação anterior em cache
+     * @return Um relatório por carteira.
+     * @throws ValidacaoException se não houver carteiras cadastradas.
+     * @throws OraculoException   se o Oráculo falhar e não houver cotação anterior em cache.
      */
     public List<RelatorioCarteiraDTO.GanhoPerda> gerarGanhoPerdaTodas() {
         List<Carteira> carteiras = listarCarteirasPorId();
@@ -220,7 +202,7 @@ public final class RelatorioController {
             ultimaCotacaoConhecida = atual;
         } catch (OraculoException e) {
             if (ultimaCotacaoConhecida == null) {
-                throw e; // sem Oráculo e sem cotação anterior: a View mostra a mensagem
+                throw e;
             }
             atual = ultimaCotacaoConhecida;
             desatualizada = true;
@@ -238,11 +220,11 @@ public final class RelatorioController {
      * ordem cronológica, registra cada operação no Model e valoriza a posição final
      * pela cotação atual.
      *
-     * @param carteira      carteira a ser apurada
-     * @param atual         cotação atual usada na valoração a mercado
-     * @param desatualizada {@code true} se a cotação atual veio do cache por falha do Oráculo
-     * @return relatório de ganho/perda da carteira, já formatado
-     * @throws OraculoException se o Oráculo falhar ao fornecer a cotação de alguma operação
+     * @param carteira      Carteira a ser apurada.
+     * @param atual         Cotação atual usada na valoração a mercado.
+     * @param desatualizada {@code true} se a cotação atual veio do cache por falha do Oráculo.
+     * @return Relatório de ganho/perda da carteira, já formatado no idioma ativo.
+     * @throws OraculoException se o Oráculo falhar ao fornecer a cotação de alguma operação.
      */
     private RelatorioCarteiraDTO.GanhoPerda apurar(Carteira carteira, Cotacao atual, boolean desatualizada) {
         CarteiraFinanceira financeiro = new CarteiraFinanceira();
@@ -252,7 +234,7 @@ public final class RelatorioController {
             Cotacao cotacao = oraculo.obterCotacao(m.getDataOperacao());
             financeiro.registrarMovimentacao(m, cotacao);
             operacoes.add(new RelatorioCarteiraDTO.OperacaoApurada(
-                    m.getDataOperacao().format(FORMATO_DATA),
+                    formatarData(m.getDataOperacao()),
                     chaveDoTipo(m),
                     quantidade(m.getQuantidade()),
                     moeda(cotacao.getValor()),
@@ -272,31 +254,17 @@ public final class RelatorioController {
                 moeda(financeiro.getSaldoMercado()),
                 moeda(financeiro.getResultadoMercado()),
                 moeda(atual.getValor()),
-                atual.getData().format(FORMATO_DATA),
+                formatarData(atual.getData()),
                 desatualizada);
     }
 
     // ---------- Utilitários ----------
 
-    /**
-     * Busca uma carteira pelo identificador.
-     *
-     * @param idCarteira identificador da carteira
-     * @return carteira encontrada
-     * @throws ValidacaoException se a carteira não existir
-     */
     private Carteira buscarCarteira(int idCarteira) {
         return carteiraDAO.consultar(idCarteira)
                 .orElseThrow(() -> new ValidacaoException("wallet.error.notFound", idCarteira));
     }
 
-    /**
-     * Obtém as movimentações de uma carteira em ordem cronológica, usando o
-     * identificador do movimento para desempatar operações da mesma data.
-     *
-     * @param idCarteira identificador da carteira
-     * @return nova lista ordenada (vazia se não houver movimentações)
-     */
     private List<Movimentacao> movimentacoesEmOrdem(int idCarteira) {
         List<Movimentacao> movimentacoes = new ArrayList<>(movimentacaoDAO.consultarPorCarteira(idCarteira));
         movimentacoes.sort(Comparator.comparing(Movimentacao::getDataOperacao)
@@ -304,45 +272,61 @@ public final class RelatorioController {
         return movimentacoes;
     }
 
-    /**
-     * Retorna a chave de internacionalização correspondente ao tipo da movimentação.
-     *
-     * @param movimentacao movimentação analisada
-     * @return chave {@code I18n} de compra ou de venda
-     */
     private static String chaveDoTipo(Movimentacao movimentacao) {
         return movimentacao.isCompra() ? "report.wallet.history.type.buy" : "report.wallet.history.type.sell";
     }
 
+    private static Locale localeAtivo() {
+        return (I18n.getIdiomaAtual() != null)
+                ? I18n.getIdiomaAtual().getLocale()
+                : Locale.getDefault();
+    }
+
     /**
-     * Formata uma quantidade de FTCoins como texto simples, sem notação científica
-     * e sem zeros à direita.
+     * Formata uma data conforme a convenção regional do idioma ativo
+     * ({@code MM/dd/yyyy} para inglês e {@code dd/MM/yyyy} para português e espanhol).
      *
-     * @param valor quantidade a ser formatada
-     * @return quantidade formatada
+     * @param data Data a ser formatada.
+     * @return Data formatada como texto.
+     */
+    private static String formatarData(LocalDate data) {
+        Locale locale = localeAtivo();
+        String padrao = "en".equalsIgnoreCase(locale.getLanguage()) ? "MM/dd/yyyy" : "dd/MM/yyyy";
+        return data.format(DateTimeFormatter.ofPattern(padrao, locale));
+    }
+
+    /**
+     * Formata uma quantidade de FTCoins usando os separadores numéricos do idioma ativo.
+     *
+     * @param valor Quantidade a ser formatada.
+     * @return Quantidade formatada.
      */
     private static String quantidade(BigDecimal valor) {
-        return valor.stripTrailingZeros().toPlainString();
+        NumberFormat nf = NumberFormat.getNumberInstance(localeAtivo());
+        nf.setMinimumFractionDigits(0);
+        nf.setMaximumFractionDigits(8);
+        return nf.format(valor.stripTrailingZeros());
     }
 
     /**
-     * Formata um valor monetário no padrão de moeda do Brasil (ex.: {@code R$ 1.234,56}).
+     * Formata um valor monetário segundo o padrão regional do idioma ativo
+     * (ex.: {@code R$ 1.234,56} em pt-BR, {@code $1,234.56} em en-US, {@code 1.234,56 €} em es-ES).
      *
-     * @param valor valor a ser formatado
-     * @return valor monetário formatado
+     * @param valor Valor a ser formatado.
+     * @return Valor monetário formatado.
      */
     private static String moeda(BigDecimal valor) {
-        return NumberFormat.getCurrencyInstance(PT_BR).format(valor);
+        return NumberFormat.getCurrencyInstance(localeAtivo()).format(valor);
     }
 
     /**
-     * Cria o {@link Collator} usado na ordenação alfabética dos titulares,
-     * com força {@link Collator#PRIMARY} para ignorar acentos e maiúsculas.
+     * Cria o {@link Collator} configurado para o idioma ativo, com força
+     * {@link Collator#PRIMARY} para ignorar acentos e maiúsculas na ordenação.
      *
-     * @return collator configurado para português do Brasil
+     * @return Collator configurado para o {@link Locale} ativo.
      */
     private static Collator criarCollator() {
-        Collator c = Collator.getInstance(PT_BR);
+        Collator c = Collator.getInstance(localeAtivo());
         c.setStrength(Collator.PRIMARY);
         return c;
     }
