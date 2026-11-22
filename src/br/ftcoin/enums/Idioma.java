@@ -32,7 +32,7 @@ public enum Idioma {
         this.codigo = codigo;
         this.pais = pais;
         this.descricao = descricao;
-        this.locale = new Locale(codigo, pais);
+        this.locale = Locale.forLanguageTag(codigo + "-" + pais);
     }
 
     /**
