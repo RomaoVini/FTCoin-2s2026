@@ -38,7 +38,7 @@ Este projeto foi desenvolvido como parte da avaliação da disciplina **Programa
 - **Usabilidade:** interface de linha de comando (CLI) simples e organizada  
 - **Desempenho:** resposta eficiente mesmo com múltiplas carteiras  
 - **Confiabilidade:** integridade dos dados nas operações financeiras  
-- **Portabilidade:** compatível com ambientes que suportam Java 8+  
+- **Portabilidade:** compatível com ambientes que suportam Java 17+
 - **Validação:** tratamento de erros e entradas inválidas  
 - **Arquitetura:** padrão MVC e uso de DAO para persistência  
 

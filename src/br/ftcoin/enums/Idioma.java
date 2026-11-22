@@ -22,7 +22,7 @@ public enum Idioma {
 
     /**
      * Construtor interno do enum que inicializa os metadados regionais
-     * e instancia o {@link Locale} utilizando o padrão moderno {@code Locale.of}.
+     * e instancia o {@link Locale} a partir dos códigos de idioma e país.
      *
      * @param codigo    Código ISO 639 do idioma (ex: {@code "pt"}).
      * @param pais      Código ISO 3166 do país (ex: {@code "BR"}).
@@ -32,7 +32,7 @@ public enum Idioma {
         this.codigo = codigo;
         this.pais = pais;
         this.descricao = descricao;
-        this.locale = Locale.of(codigo, pais);
+        this.locale = new Locale(codigo, pais);
     }
 
     /**
