@@ -16,15 +16,25 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import br.ftcoin.dto.ExchangeRate;
+import br.ftcoin.enums.Idioma;
 import br.ftcoin.model.Cotacao;
 import br.ftcoin.network.NetworkResponse;
 import br.ftcoin.service.OraculoException;
 import br.ftcoin.service.OraculoService;
+import br.ftcoin.util.I18n;
 
 class OraculoServiceTest {
+   @BeforeEach
+   @AfterEach
+   void voltarParaPortugues() {
+      I18n.setIdioma(Idioma.PORTUGUES);
+   }
+
    @Test
    void retornaCotacaoDaDataSolicitada() throws Exception {
       LocalDate data = LocalDate.of(2026, 11, 9);
@@ -85,6 +95,22 @@ class OraculoServiceTest {
 
       OraculoException exception = assertThrows(OraculoException.class, () -> consultar(resposta, data));
       assertTrue(exception.getMessage().contains("cotação inválida"));
+   }
+
+   @Test
+   void mensagemDeFalhaDeConexaoUsaIdiomaAtivo() throws Exception {
+      int porta;
+      try (ServerSocket servidor = new ServerSocket(0)) {
+         porta = servidor.getLocalPort();
+      }
+
+      I18n.setIdioma(Idioma.INGLES);
+      OraculoService oraculo = new OraculoService("127.0.0.1", porta, "grupo", "senha");
+
+      OraculoException exception = assertThrows(
+            OraculoException.class, () -> oraculo.obterCotacao(LocalDate.of(2026, 11, 9)));
+
+      assertEquals("Unable to query the quote oracle.", exception.getMessage());
    }
 
    private Cotacao consultar(NetworkResponse resposta, LocalDate data) throws Exception {

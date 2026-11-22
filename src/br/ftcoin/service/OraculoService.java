@@ -19,6 +19,7 @@ import br.ftcoin.dto.ExchangeRate;
 import br.ftcoin.model.Cotacao;
 import br.ftcoin.network.NetworkRequest;
 import br.ftcoin.network.NetworkResponse;
+import br.ftcoin.util.I18n;
 
 /**
  * Integração com o servidor proprietário de cotações FTCoin.
@@ -72,7 +73,7 @@ public final class OraculoService implements OraculoCotacao {
     * Cria o serviço usando o endereço padrão do servidor e as credenciais do projeto.
     */
    public OraculoService() {
-      this(DEFAULT_HOST, DEFAULT_PORT, GROUP_NAME, GROUP_PASSWORD);
+      this(DEFAULT_HOST, DEFAULT_PORT, GROUP_NAME, GROUP_PASSWORD, true);
    }
 
    /**
@@ -83,7 +84,7 @@ public final class OraculoService implements OraculoCotacao {
     * @throws IllegalArgumentException se o endereço ou a porta forem inválidos
     */
    public OraculoService(String host, int port) {
-      this(host, port, GROUP_NAME, GROUP_PASSWORD);
+      this(host, port, GROUP_NAME, GROUP_PASSWORD, true);
    }
 
    /**
@@ -96,13 +97,19 @@ public final class OraculoService implements OraculoCotacao {
     * @throws IllegalArgumentException se algum parâmetro for inválido
     */
    public OraculoService(String host, int port, String groupName, String groupPassword) {
+      this(host, port, groupName, groupPassword, false);
+   }
+
+   private OraculoService(String host, int port, String groupName, String groupPassword,
+         boolean allowMissingConfiguredPassword) {
       if (host == null || host.isBlank()) {
          throw new IllegalArgumentException("Host do oráculo obrigatório");
       }
       if (port < 1 || port > 65535) {
          throw new IllegalArgumentException("Porta do oráculo inválida");
       }
-      if (groupName == null || groupName.isBlank() || groupPassword == null || groupPassword.isBlank()) {
+      if (groupName == null || groupName.isBlank()
+            || (!allowMissingConfiguredPassword && (groupPassword == null || groupPassword.isBlank()))) {
          throw new IllegalArgumentException("Credenciais do oráculo obrigatórias");
       }
 
@@ -124,7 +131,7 @@ public final class OraculoService implements OraculoCotacao {
    @Override
    public Cotacao obterCotacao(LocalDate data) {
       if (data == null) {
-         throw new OraculoException("A data da cotação é obrigatória.");
+         throw new OraculoException(I18n.get("oracle.error.dateRequired"));
       }
 
       return cache.computeIfAbsent(data, this::consultarCotacaoRemota);
@@ -144,11 +151,12 @@ public final class OraculoService implements OraculoCotacao {
             try {
                return new Cotacao(rate.getDate(), rate.getValue());
             } catch (IllegalArgumentException exception) {
-               throw new OraculoException("O servidor retornou uma cotação inválida para " + data + ".", exception);
+               throw new OraculoException(
+                     I18n.getComParametros("oracle.error.invalidQuote", data), exception);
             }
          }
       }
-      throw new OraculoException("Não há cotação disponível para " + data + ".");
+      throw new OraculoException(I18n.getComParametros("oracle.error.quoteUnavailable", data));
    }
 
    /**
@@ -162,7 +170,7 @@ public final class OraculoService implements OraculoCotacao {
     */
    public List<Cotacao> obterCotacoes(LocalDate desde, LocalDate ate) {
       if (desde == null || ate == null || desde.isAfter(ate)) {
-         throw new OraculoException("Intervalo de datas inválido.");
+         throw new OraculoException(I18n.get("oracle.error.invalidInterval"));
       }
 
       List<ExchangeRate> rates = solicitarCotacoes(desde, ate);
@@ -174,7 +182,7 @@ public final class OraculoService implements OraculoCotacao {
          cotacoes.forEach(cotacao -> cache.putIfAbsent(cotacao.getData(), cotacao));
          return cotacoes;
       } catch (RuntimeException exception) {
-         throw new OraculoException("O servidor retornou cotações inválidas.", exception);
+         throw new OraculoException(I18n.get("oracle.error.invalidQuotes"), exception);
       }
    }
 
@@ -188,6 +196,10 @@ public final class OraculoService implements OraculoCotacao {
     *                           mensagem de erro do servidor ou lista de cotações ausente
     */
    private List<ExchangeRate> solicitarCotacoes(LocalDate desde, LocalDate ate) {
+      if (groupPassword == null || groupPassword.isBlank()) {
+         throw new OraculoException(I18n.get("oracle.error.passwordMissing"));
+      }
+
       NetworkResponse response;
       try (Socket socket = new Socket()) {
          socket.connect(new InetSocketAddress(host, port), CONNECTION_TIMEOUT_MILLIS);
@@ -198,19 +210,20 @@ public final class OraculoService implements OraculoCotacao {
             output.flush();
             Object received = input.readObject();
             if (!(received instanceof NetworkResponse networkResponse)) {
-               throw new OraculoException("O servidor retornou uma resposta inesperada.");
+               throw new OraculoException(I18n.get("oracle.error.unexpectedResponse"));
             }
             response = networkResponse;
          }
       } catch (IOException | ClassNotFoundException exception) {
-         throw new OraculoException("Não foi possível consultar o oráculo de cotações.", exception);
+         throw new OraculoException(I18n.get("oracle.error.communication"), exception);
       }
 
       if (response.getErrorMessage() != null && !response.getErrorMessage().isBlank()) {
-         throw new OraculoException("O oráculo recusou a consulta: " + response.getErrorMessage());
+         throw new OraculoException(
+               I18n.getComParametros("oracle.error.rejected", response.getErrorMessage()));
       }
       if (response.getExchangeRates() == null) {
-         throw new OraculoException("O servidor retornou uma lista de cotações inválida.");
+         throw new OraculoException(I18n.get("oracle.error.invalidRatesList"));
       }
       return response.getExchangeRates();
    }
