@@ -8,9 +8,10 @@ import br.ftcoin.model.Cotacao;
 import br.ftcoin.model.Movimentacao;
 import br.ftcoin.service.OraculoCotacao;
 import br.ftcoin.service.OraculoException;
-import br.ftcoin.util.I18n;
 import br.ftcoin.view.ConsoleUtils;
 import br.ftcoin.view.MenuView;
+import br.ftcoin.view.MovimentacaoView;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -82,25 +83,7 @@ public class MovimentacaoController {
         if (this.menuView == null) {
             throw new IllegalStateException("MenuView não foi inicializada neste controlador.");
         }
-
-        List<String> opcoes = List.of(
-            "transactionMenu.buyCoin",   // 1. Comprar moeda virtual
-            "transactionMenu.sellCoin",  // 2. Vender moeda virtual
-            "transactionMenu.quoteCoin"  // 3. Cotar moeda virtual
-        );
-
-        while (true) {
-            int escolha = menuView.exibirEObterOpcao("transactionMenu.title", opcoes);
-            if (escolha == 0) {
-                return;
-            }
-
-            switch (escolha) {
-                case 1 -> processarOperacaoCLI(TipoOperacao.COMPRA);
-                case 2 -> processarOperacaoCLI(TipoOperacao.VENDA);
-                case 3 -> exibirCotacaoAtualCLI();
-            }
-        }
+        new MovimentacaoView(consoleUtils, this).exibirMenu();
     }
 
     /**

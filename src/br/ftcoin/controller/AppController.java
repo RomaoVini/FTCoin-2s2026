@@ -1,6 +1,8 @@
 package br.ftcoin.controller;
 
+import br.ftcoin.dao.CarteiraDAO;
 import br.ftcoin.dao.DAOFactory;
+import br.ftcoin.dao.MovimentacaoDAO;
 import br.ftcoin.enums.Idioma;
 import br.ftcoin.enums.MenuOperacao;
 import br.ftcoin.service.OraculoCotacao;
@@ -65,18 +67,24 @@ public class AppController {
         DAOFactory daoFactory = DAOFactory.getFactory(this.tipoPersistencia);
         OraculoCotacao oraculo = new OraculoService();
 
+        // Cada DAO é criado uma única vez e compartilhado entre os controllers:
+        // na persistência em memória, cada chamada à fábrica cria um repositório novo,
+        // e controllers com repositórios diferentes não enxergariam os mesmos dados.
+        CarteiraDAO carteiraDAO = daoFactory.getCarteiraDAO();
+        MovimentacaoDAO movimentacaoDAO = daoFactory.getMovimentacaoDAO();
+
         // Injeta os DAOs, o serviço de cotações e as Views nos controladores de domínio
-        this.carteiraController = new CarteiraController(menuView, daoFactory.getCarteiraDAO());
+        this.carteiraController = new CarteiraController(menuView, carteiraDAO);
         this.movimentacaoController = new MovimentacaoController(
                 menuView,
-                daoFactory.getCarteiraDAO(),
-                daoFactory.getMovimentacaoDAO(),
+                carteiraDAO,
+                movimentacaoDAO,
                 oraculo
         );
         this.relatorioController = new RelatorioController(
-                menuView,
-                daoFactory.getCarteiraDAO(),
-                daoFactory.getMovimentacaoDAO(),
+                menuView, 
+                daoFactory.getCarteiraDAO(), 
+                daoFactory.getMovimentacaoDAO(), 
                 oraculo
         );
         this.ajudaController = new AjudaController(consoleUtils);
