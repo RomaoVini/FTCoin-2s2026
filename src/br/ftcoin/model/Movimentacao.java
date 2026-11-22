@@ -227,11 +227,14 @@ public class Movimentacao {
      *
      * @param data Data a validar.
      * @return A própria data, se válida.
-     * @throws ValidacaoException se a data for nula.
+     * @throws ValidacaoException se a data for nula ou posterior à data atual.
      */
     private static LocalDate validarDataOperacao(LocalDate data) {
         if (data == null) {
             throw new ValidacaoException("transaction.error.dateRequired");
+        }
+        if (data.isAfter(LocalDate.now())) {
+            throw new ValidacaoException("transaction.error.futureDate");
         }
         return data;
     }

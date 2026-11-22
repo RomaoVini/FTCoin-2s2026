@@ -68,6 +68,12 @@ class MovimentacaoTest {
     }
 
     @Test
+    void rejeitaDataFutura() {
+        assertThrows(ValidacaoException.class,
+                () -> new Movimentacao(1, LocalDate.now().plusDays(1), TipoOperacao.COMPRA, MIL));
+    }
+
+    @Test
     void rejeitaTipoNulo() {
         assertThrows(ValidacaoException.class, () -> new Movimentacao(1, DATA, (TipoOperacao) null, MIL));
     }

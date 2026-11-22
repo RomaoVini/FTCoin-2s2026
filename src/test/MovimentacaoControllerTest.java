@@ -66,6 +66,15 @@ class MovimentacaoControllerTest {
                 () -> controller.cadastrar(CARTEIRA, data("2026-02-01"), TipoOperacao.COMPRA, BigDecimal.ZERO));
     }
 
+    @Test
+    void compraComDataFuturaEhRejeitadaSemPersistir() {
+        assertThrows(ValidacaoException.class,
+                () -> controller.cadastrar(CARTEIRA, LocalDate.now().plusDays(1),
+                        TipoOperacao.COMPRA, BigDecimal.TEN));
+
+        assertTrue(movimentacoes.consultarTodos().isEmpty());
+    }
+
     // ---------- regra de saldo na venda ----------
 
     @Test
