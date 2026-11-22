@@ -1,5 +1,9 @@
 package br.ftcoin.service;
 
+import br.ftcoin.dto.ExchangeRate;
+import br.ftcoin.model.Cotacao;
+import br.ftcoin.network.NetworkRequest;
+import br.ftcoin.network.NetworkResponse;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -10,11 +14,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-
-import br.ftcoin.dto.ExchangeRate;
-import br.ftcoin.model.Cotacao;
-import br.ftcoin.network.NetworkRequest;
-import br.ftcoin.network.NetworkResponse;
 
 /**
  * Integração com o servidor proprietário de cotações FTCoin.
@@ -141,7 +140,7 @@ public final class OraculoService implements OraculoCotacao {
             }
          }
       }
-      throw new OraculoException("Não há cotação disponível para " + data + ".");
+      throw new OraculoException("Cotação inválida.");
    }
 
    /**

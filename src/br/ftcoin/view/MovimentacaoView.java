@@ -6,7 +6,6 @@ import br.ftcoin.exception.ValidacaoException;
 import br.ftcoin.model.Cotacao;
 import br.ftcoin.model.Movimentacao;
 import br.ftcoin.util.I18n;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -37,7 +36,7 @@ public class MovimentacaoView {
     );
 
     /** Formatador de data no padrão brasileiro (dd/MM/uuuu). */
-    private static final DateTimeFormatter FORMATO_BR = DateTimeFormatter.ofPattern("dd/MM/uuuu");
+    private static final DateTimeFormatter FORMATO_EXIBICAO = DateTimeFormatter.ofPattern("dd/MM/uuuu");
 
     /** Controlador que concentra as regras de negócio de movimentações e consulta de cotações. */
     private final MovimentacaoController controller;
@@ -81,6 +80,8 @@ public class MovimentacaoView {
                     case 3 -> consultarCotacao();
                     default -> { /* 0 = voltar */ }
                 }
+            } catch (EntradaEncerradaException e) {
+                throw e;   // deixa subir até o Main
             } catch (ValidacaoException e) {
                 console.exibirErro(e.getMessage());
             } catch (RuntimeException e) {
@@ -123,7 +124,7 @@ public class MovimentacaoView {
         Cotacao cotacao = controller.consultarCotacao(data);
 
         System.out.println(ConsoleUtils.NEGRITO + I18n.get("report.oracle.display.title") + ConsoleUtils.RESET);
-        System.out.println(I18n.get("report.oracle.display.date") + " " + cotacao.getData());
+        System.out.println(I18n.get("report.oracle.display.date") + " " + cotacao.getData().format(FORMATO_EXIBICAO));
         System.out.println(I18n.get("report.oracle.display.price") + " R$ " + cotacao.getValor());
     }
 
@@ -162,7 +163,7 @@ public class MovimentacaoView {
             try {
                 String texto = entrada.trim();
                 return texto.contains("/")
-                        ? LocalDate.parse(texto, FORMATO_BR)
+                        ? LocalDate.parse(texto, FORMATO_EXIBICAO)
                         : LocalDate.parse(texto);
             } catch (DateTimeParseException e) {
                 console.exibirErro(I18n.get("transactionView.error.invalidDate"));
@@ -177,11 +178,15 @@ public class MovimentacaoView {
      * @return Texto contendo identificador do movimento, carteira, data, tipo da operação e quantidade.
      */
     private static String formatar(Movimentacao m) {
+        String chaveTipo = m.isCompra()
+            ? "report.wallet.history.type.buy"
+            : "report.wallet.history.type.sell";
+            
         return I18n.getComParametros("transactionView.item",
                 String.valueOf(m.getIdMovimento()),
                 String.valueOf(m.getIdCarteira()),
-                m.getDataOperacao().toString(),
-                m.getTipoOperacao().name(),
+                m.getDataOperacao().format(FORMATO_EXIBICAO),
+                I18n.get(chaveTipo),
                 m.getQuantidade().toPlainString());
     }
 }

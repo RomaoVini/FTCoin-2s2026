@@ -11,13 +11,14 @@ import br.ftcoin.service.OraculoException;
 import br.ftcoin.util.I18n;
 import br.ftcoin.view.MenuView;
 import br.ftcoin.view.MovimentacaoView;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+
 
 /**
  * Controlador responsável por gerenciar as operações financeiras de {@link Movimentacao}
@@ -116,6 +117,9 @@ public class MovimentacaoController {
      * @return A {@link Cotacao} correspondente à data.
      * @throws OraculoException se não houver cotação ou se a consulta ao oráculo falhar.
      */
+
+    private static final DateTimeFormatter FORMATO_EXIBICAO = DateTimeFormatter.ofPattern("dd/MM/uuuu");
+
     public Cotacao consultarCotacao(LocalDate data) {
         Objects.requireNonNull(data, () -> I18n.get("transaction.error.dateRequired"));
         return oraculo.obterCotacao(data);

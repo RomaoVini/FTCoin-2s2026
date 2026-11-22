@@ -56,10 +56,17 @@ public class ConsoleUtils {
      * @param mensagemPrompt Texto de instrução exibido antes da leitura.
      * @return Texto não vazio informado pelo usuário (sem espaços nas extremidades).
      */
+    private String lerLinha() {
+        if (!scanner.hasNextLine()) {
+            throw new EntradaEncerradaException();
+        }
+        return scanner.nextLine();
+    } 
+
     public String lerString(String mensagemPrompt) {
         while (true) {
             System.out.print(mensagemPrompt + " ");
-            String entrada = scanner.nextLine().trim();
+            String entrada = lerLinha().trim();          // era scanner.nextLine().trim()
             if (!entrada.isBlank()) {
                 return entrada;
             }
@@ -76,7 +83,7 @@ public class ConsoleUtils {
      */
     public String lerStringOpcional(String mensagemPrompt) {
         System.out.print(mensagemPrompt + " ");
-        return scanner.nextLine().trim();
+        return lerLinha().trim();
     }
 
     /**
@@ -90,7 +97,7 @@ public class ConsoleUtils {
         while (true) {
             System.out.print(mensagemPrompt + " ");
             try {
-                String entrada = scanner.nextLine().trim();
+                String entrada = lerLinha().trim();
                 return Integer.parseInt(entrada);
             } catch (NumberFormatException e) {
                 exibirErro(I18n.get("generic.confirmInvalid"));
@@ -103,7 +110,7 @@ public class ConsoleUtils {
      */
     public void pausar() {
         System.out.println(I18n.get("generic.pressEnter"));
-        scanner.nextLine();
+        lerLinha();
     }
 
     /**

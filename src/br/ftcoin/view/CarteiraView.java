@@ -73,6 +73,8 @@ public class CarteiraView {
                     case 4 -> excluir();
                     default -> { /* 0 = voltar */ }
                 }
+            } catch (EntradaEncerradaException e) {
+                throw e;   // deixa subir até o Main
             } catch (ValidacaoException e) {
                 console.exibirErro(e.getMessage());
             } catch (RuntimeException e) {
