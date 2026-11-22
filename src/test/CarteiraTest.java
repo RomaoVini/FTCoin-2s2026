@@ -3,6 +3,7 @@ package test;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
+import br.ftcoin.exception.ValidacaoException;
 import br.ftcoin.model.Carteira;
 
 class CarteiraTest {
@@ -20,7 +21,7 @@ class CarteiraTest {
     @Test
     void naoDeveAceitarIdentificadorInvalido() {
         assertThrows(
-            IllegalArgumentException.class,
+            ValidacaoException.class,
             () -> new Carteira(0, "Ana Julia", "Binance")
         );
     }
@@ -28,7 +29,7 @@ class CarteiraTest {
     @Test
     void naoDeveAceitarTitularVazio() {
         assertThrows(
-            IllegalArgumentException.class,
+            ValidacaoException.class,
             () -> new Carteira(1, " ", "Binance")
         );
     }
@@ -36,7 +37,7 @@ class CarteiraTest {
     @Test
     void naoDeveAceitarCorretoraVazia() {
         assertThrows(
-            IllegalArgumentException.class,
+            ValidacaoException.class,
             () -> new Carteira(1, "Ana Julia", "")
         );
     }

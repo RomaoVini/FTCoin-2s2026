@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.TreeSet;
@@ -80,12 +81,12 @@ class MensagensI18nTest {
     }
 
     @Test
-    void idiomaNuloVoltaParaPortugues() {
-        I18n.setIdioma(Idioma.INGLES);
+    void idiomaNuloDetectaIdiomaDoLocalePadrao() {
+        Locale.setDefault(Idioma.ESPANHOL.getLocale());
 
         I18n.setIdioma(null);
 
-        assertEquals(Idioma.PORTUGUES, I18n.getIdiomaAtual());
+        assertEquals(Idioma.ESPANHOL, I18n.getIdiomaAtual());
     }
 
     @Test
