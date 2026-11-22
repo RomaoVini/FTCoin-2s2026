@@ -57,6 +57,22 @@ Este projeto foi desenvolvido como parte da avaliação da disciplina **Programa
    - Memória local (simulação de banco)  
    - Banco de dados relacional (MariaDB)  
 
+## 🔐 Configuração das credenciais
+
+Configure a senha do grupo do oráculo sem armazená-la no código-fonte:
+
+```text
+ORACULO_PASSWORD=sua_senha
+```
+
+Alternativamente, crie um arquivo `oraculo.env` na raiz do projeto com:
+
+```text
+ORACULO_PASSWORD=sua_senha
+```
+
+O arquivo `oraculo.env` é ignorado pelo Git e não deve ser versionado.
+
 ## 👥 Colaboradores
 
 Todos os integrantes participaram do desenvolvimento do software.

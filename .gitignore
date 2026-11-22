@@ -24,3 +24,6 @@ desktop.ini
 
 # Logs
 *.log
+
+# Local service credentials
+oraculo.env

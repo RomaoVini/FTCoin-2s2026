@@ -5,8 +5,12 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -31,8 +35,11 @@ public final class OraculoService implements OraculoCotacao {
    /** Nome do grupo cliente usado na autenticação junto ao servidor. */
    private static final String GROUP_NAME = "POO2_2s26_A02";
 
+   /** Pares chave/valor lidos do arquivo local {@code oraculo.env}. */
+   private static final Map<String, String> ENV_LOCAL = carregarArquivoEnv(Path.of("oraculo.env"));
+
    /** Credencial do grupo cliente usada na autenticação junto ao servidor. */
-   private static final String GROUP_PASSWORD = "W90OL8wsC8";
+   private static final String GROUP_PASSWORD = obterConfiguracao("ORACULO_PASSWORD", null);
 
    /** Endereço padrão do servidor de cotações. */
    private static final String DEFAULT_HOST = "143.106.243.64";
@@ -206,5 +213,47 @@ public final class OraculoService implements OraculoCotacao {
          throw new OraculoException("O servidor retornou uma lista de cotações inválida.");
       }
       return response.getExchangeRates();
+   }
+
+   /**
+    * Busca a credencial nas variáveis de ambiente do sistema e, em seguida,
+    * no arquivo local {@code oraculo.env}.
+    */
+   private static String obterConfiguracao(String chave, String valorPadrao) {
+      String envSistema = System.getenv(chave);
+      if (envSistema != null && !envSistema.isBlank()) {
+         return envSistema.trim();
+      }
+
+      String envArquivo = ENV_LOCAL.get(chave);
+      if (envArquivo != null && !envArquivo.isBlank()) {
+         return envArquivo.trim();
+      }
+
+      return valorPadrao;
+   }
+
+   /**
+    * Lê pares {@code CHAVE=VALOR} do arquivo local de configuração.
+    */
+   private static Map<String, String> carregarArquivoEnv(Path caminho) {
+      Map<String, String> mapa = new HashMap<>();
+      if (!Files.exists(caminho)) {
+         return mapa;
+      }
+
+      try {
+         for (String linha : Files.readAllLines(caminho)) {
+            String limpa = linha.trim();
+            if (limpa.isEmpty() || limpa.startsWith("#") || !limpa.contains("=")) {
+               continue;
+            }
+            String[] partes = limpa.split("=", 2);
+            mapa.put(partes[0].trim(), partes[1].trim());
+         }
+      } catch (IOException ignored) {
+         // Sem arquivo legível, a configuração dependerá somente das variáveis de ambiente.
+      }
+      return mapa;
    }
 }
