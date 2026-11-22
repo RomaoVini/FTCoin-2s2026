@@ -4,7 +4,6 @@ import br.ftcoin.dao.CarteiraDAO;
 import br.ftcoin.dao.MovimentacaoDAO;
 import br.ftcoin.enums.TipoOperacao;
 import br.ftcoin.exception.ValidacaoException;
-import br.ftcoin.model.CarteiraFinanceira;
 import br.ftcoin.model.Cotacao;
 import br.ftcoin.model.Movimentacao;
 import br.ftcoin.service.OraculoCotacao;
@@ -12,12 +11,12 @@ import br.ftcoin.service.OraculoException;
 import br.ftcoin.util.I18n;
 import br.ftcoin.view.ConsoleUtils;
 import br.ftcoin.view.MenuView;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
-
+import java.util.Objects;  
 /**
  * Controlador responsável por gerenciar as operações financeiras de {@link Movimentacao}
  * (Compra e Venda de moedas virtuais) e a consulta de cotações junto ao {@link OraculoCotacao}.
@@ -121,9 +120,9 @@ public class MovimentacaoController {
 
         // Instancia primeiro para acionar as validações estruturais do Model (data nula, qtd <= 0, etc.)
         Movimentacao novaMovimentacao = new Movimentacao(idCarteira, data, tipo, quantidade);
-
+        
         if (tipo == TipoOperacao.VENDA) {
-            validarSaldoParaVenda(idCarteira, quantidade);
+            validarSaldoAoLongoDoTempo(idCarteira, novaMovimentacao);
         }
 
         movimentacaoDAO.incluir(novaMovimentacao);
@@ -166,27 +165,36 @@ public class MovimentacaoController {
     }
 
     /**
-     * Verifica se a carteira possui saldo de moedas suficiente para a venda solicitada.
-     *
-     * @param idCarteira      Identificador da carteira vendedora.
-     * @param quantidadeVenda Quantidade de moedas que se deseja vender.
-     * @throws ValidacaoException se o saldo atual for menor que a quantidade da venda.
-     */
-    private void validarSaldoParaVenda(int idCarteira, BigDecimal quantidadeVenda) {
-        BigDecimal saldoAtual = calcularSaldoMoedas(idCarteira);
-        if (saldoAtual.compareTo(quantidadeVenda) < 0) {
-            throw new ValidacaoException("transaction.sell.insufficientBalance");
-        }
-    }
-
-    /**
-     * Calcula o saldo atual de moedas de uma carteira a partir do seu histórico de movimentações.
+     * Verifica se a nova movimentação mantém o saldo de moedas da carteira não negativo em todas as datas.
+     * Reconstrói a linha do tempo (histórico existente + nova movimentação) e acumula o saldo em ordem
+     * cronológica; se o saldo ficar negativo em qualquer ponto, a operação é rejeitada.
      *
      * @param idCarteira Identificador da carteira.
-     * @return Saldo de moedas (compras menos vendas).
+     * @param nova       Movimentação candidata, ainda não persistida.
+     * @throws ValidacaoException se a operação deixar o saldo negativo em alguma data.
      */
-    private BigDecimal calcularSaldoMoedas(int idCarteira) {
-        return CarteiraFinanceira.calcularSaldoQuantidade(movimentacaoDAO.consultarPorCarteira(idCarteira));
+    private void validarSaldoAoLongoDoTempo(int idCarteira, Movimentacao nova) {
+        // Cópia mutável: a lista devolvida pelo DAO pode ser imutável (ex.: List.of em testes com mock).
+        List<Movimentacao> todas = new ArrayList<>(movimentacaoDAO.consultarPorCarteira(idCarteira));
+
+        // Uniformiza a ordem por id (ordem de inclusão), pois o DAO MariaDB devolve DESC e o de memória por data.
+        todas.sort(Comparator.comparingInt(Movimentacao::getIdMovimento));
+
+        // A nova movimentação entra no fim (ainda tem id = 0) para ficar depois das antigas em caso de empate de data.
+        todas.add(nova);
+
+        // Ordena por data; o sort é estável, então no mesmo dia mantém a ordem de inclusão
+        // (compra e venda no mesmo dia continuam válidas).
+        todas.sort(Comparator.comparing(Movimentacao::getDataOperacao));
+
+        // Percorre a linha do tempo acumulando o saldo; saldo negativo em qualquer ponto invalida a venda.
+        BigDecimal saldo = BigDecimal.ZERO;
+        for (Movimentacao m : todas) {
+            saldo = m.isCompra() ? saldo.add(m.getQuantidade()) : saldo.subtract(m.getQuantidade());
+            if (saldo.signum() < 0) {
+                throw new ValidacaoException("transaction.sell.insufficientBalance");
+            }
+        }
     }
 
     /**

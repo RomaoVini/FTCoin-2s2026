@@ -6,9 +6,9 @@ import br.ftcoin.exception.ValidacaoException;
 import br.ftcoin.model.Cotacao;
 import br.ftcoin.model.Movimentacao;
 import br.ftcoin.util.I18n;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Objects;
@@ -36,7 +36,15 @@ public class MovimentacaoView {
     );
 
     /** Controlador que concentra as regras de negócio de movimentações e consulta de cotações. */
-    private final MovimentacaoController controller;
+    /** private final MovimentacaoController controller; */
+
+    /**Mudanças de movimentação controller de private para public para permitir acesso de outras classes*/
+    public MovimentacaoController(MenuView menuView, CarteiraDAO carteiraDAO, MovimentacaoDAO movimentacaoDAO, OraculoCotacao oraculo){
+        this(carteiraDAO, movimentacaoDAO, oraculo);
+        this.menuView = Objects.requireNonNull(menuView, "MenuView não pode ser nula.");
+        this.consoleUtils = menuView.getConsoleUtils();
+        this.view = new MovimentacaoView(this.consoleUtils, this);
+    }
 
     /** Utilitário de console para leitura de entradas e exibição de mensagens formatadas. */
     private final ConsoleUtils console;
@@ -149,6 +157,8 @@ public class MovimentacaoView {
      * @param prompt Texto de instrução exibido antes da leitura.
      * @return Data informada pelo usuário ou {@link LocalDate#now()} se a entrada for vazia.
      */
+    private static final DateTimeFormatter FORMATO_BR = DateTimeFormatter.ofPattern("dd/MM/uuuu");
+
     private LocalDate lerDataOpcional(String prompt) {
         while (true) {
             String entrada = console.lerStringOpcional(prompt);
@@ -156,7 +166,10 @@ public class MovimentacaoView {
                 return LocalDate.now();
             }
             try {
-                return LocalDate.parse(entrada.trim());
+                String texto = entrada.trim();
+                return texto.contains("/")
+                        ? LocalDate.parse(texto, FORMATO_BR)
+                        : LocalDate.parse(texto);
             } catch (DateTimeParseException e) {
                 console.exibirErro(I18n.get("transactionView.error.invalidDate"));
             }

@@ -2,7 +2,6 @@ package br.ftcoin.model;
 
 import br.ftcoin.enums.TipoOperacao;
 import br.ftcoin.exception.ValidacaoException;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Objects;
@@ -27,6 +26,7 @@ public class Movimentacao {
 
     /** Data em que a operação foi realizada. */
     private LocalDate data;
+
 
     /** Tipo da operação (compra ou venda). */
     private TipoOperacao tipo;
