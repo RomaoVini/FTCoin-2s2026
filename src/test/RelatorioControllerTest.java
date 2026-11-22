@@ -1,8 +1,10 @@
 package test;
 
+import br.ftcoin.controller.RelatorioController;
 import br.ftcoin.dao.CarteiraDAOMemoria;
 import br.ftcoin.dao.MovimentacaoDAOMemoria;
 import br.ftcoin.dto.RelatorioCarteiraDTO;
+import br.ftcoin.enums.Idioma;
 import br.ftcoin.enums.TipoOperacao;
 import br.ftcoin.exception.ValidacaoException;
 import br.ftcoin.model.Carteira;
@@ -10,13 +12,15 @@ import br.ftcoin.model.Cotacao;
 import br.ftcoin.model.Movimentacao;
 import br.ftcoin.service.OraculoCotacao;
 import br.ftcoin.service.OraculoException;
+import br.ftcoin.util.I18n;
 import br.ftcoin.view.MenuView;
-import br.ftcoin.controller.RelatorioController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,8 +33,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Testes do {@link RelatorioController}: ordenação das carteiras, saldo atual,
- * histórico de movimentações e ganho/perda, usando DAOs em memória e um
- * Oráculo simulado (sem acesso à rede).
+ * histórico de movimentações, ganho/perda e internacionalização de datas e moedas,
+ * usando DAOs em memória e um Oráculo simulado (sem acesso à rede).
  */
 class RelatorioControllerTest {
 
@@ -47,6 +51,7 @@ class RelatorioControllerTest {
 
     @BeforeEach
     void setUp() {
+        I18n.setIdioma(Idioma.PORTUGUES);
         carteiras = new CarteiraDAOMemoria();
         movimentacoes = new MovimentacaoDAOMemoria();
         precos = new HashMap<>();
@@ -113,13 +118,16 @@ class RelatorioControllerTest {
 
         assertEquals("0", saldo.saldoQuantidade());
         assertTrue(saldo.saldoFinanceiro().contains("0,00"));
+        assertTrue(saldo.custoMedio().contains("0,00"));
+        assertTrue(saldo.saldoMercado().contains("0,00"));
     }
 
     @Test
-    void saldoConsideraComprasEVendasAoCustoMedio() {
+    void saldoConsideraComprasEVendasAoCustoMedioEValorMercado() {
         incluirCarteira(ID_CARTEIRA, "Ana");
         precos.put(DIA_COMPRA, new BigDecimal("10.00"));
         precos.put(DIA_VENDA, new BigDecimal("20.00"));
+        precos.put(LocalDate.now(), new BigDecimal("15.00"));
         incluirMovimentacao(DIA_COMPRA, TipoOperacao.COMPRA, "1000");
         incluirMovimentacao(DIA_VENDA, TipoOperacao.VENDA, "500");
 
@@ -127,24 +135,43 @@ class RelatorioControllerTest {
 
         assertEquals("500", saldo.saldoQuantidade());
         assertTrue(saldo.saldoFinanceiro().contains("5.000,00")); // 500 x custo médio 10
+        assertTrue(saldo.custoMedio().contains("10,00"));
+        assertTrue(saldo.saldoMercado().contains("7.500,00"));    // 500 x cotação atual 15
     }
 
     // ---------- histórico ----------
 
     @Test
-    void historicoSaiEmOrdemCronologica() {
+    void historicoSaiEmOrdemCronologicaComCustoMedioESaldoMercado() {
         incluirCarteira(ID_CARTEIRA, "Ana");
-        incluirMovimentacao(LocalDate.of(2026, 2, 5), TipoOperacao.VENDA, "100");
-        incluirMovimentacao(LocalDate.of(2026, 2, 1), TipoOperacao.COMPRA, "1000");
-        incluirMovimentacao(LocalDate.of(2026, 2, 3), TipoOperacao.COMPRA, "200");
+        LocalDate d1 = LocalDate.of(2026, 2, 1);
+        LocalDate d2 = LocalDate.of(2026, 2, 3);
+        LocalDate d3 = LocalDate.of(2026, 2, 5);
+        precos.put(d1, new BigDecimal("10.00"));
+        precos.put(d2, new BigDecimal("16.00"));
+        precos.put(d3, new BigDecimal("20.00"));
+
+        incluirMovimentacao(d3, TipoOperacao.VENDA, "100");
+        incluirMovimentacao(d1, TipoOperacao.COMPRA, "1000");
+        incluirMovimentacao(d2, TipoOperacao.COMPRA, "200");
 
         RelatorioCarteiraDTO.Historico historico = controller.gerarHistorico(ID_CARTEIRA);
 
+        DateTimeFormatter fmt = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
+                .withLocale(I18n.getIdiomaAtual().getLocale());
         List<String> datas = historico.movimentos().stream()
                 .map(RelatorioCarteiraDTO.Movimento::data).toList();
-        assertEquals(List.of("01/02/2026", "03/02/2026", "05/02/2026"), datas);
+        assertEquals(List.of(d1.format(fmt), d2.format(fmt), d3.format(fmt)), datas);
         assertEquals("report.wallet.history.type.buy", historico.movimentos().get(0).tipoChave());
         assertEquals("report.wallet.history.type.sell", historico.movimentos().get(2).tipoChave());
+
+        // Após compra de 1000 a 10,00 + 200 a 16,00 -> custo médio = 13.200 / 1200 = 11,00; saldo mercado = 1200 * 16 = 19.200,00
+        assertTrue(historico.movimentos().get(1).custoMedio().contains("11,00"));
+        assertTrue(historico.movimentos().get(1).saldoMercado().contains("19.200,00"));
+
+        // Após venda de 100 a 20,00 -> custo médio permanece 11,00; saldo mercado = 1100 * 20 = 22.000,00
+        assertTrue(historico.movimentos().get(2).custoMedio().contains("11,00"));
+        assertTrue(historico.movimentos().get(2).saldoMercado().contains("22.000,00"));
     }
 
     @Test
@@ -206,6 +233,29 @@ class RelatorioControllerTest {
         oraculoForaDoAr = true;
 
         assertThrows(OraculoException.class, () -> controller.gerarGanhoPerdaTodas());
+    }
+
+    // ---------- internacionalização ----------
+
+    @Test
+    void formatacaoDeMoedaEDataRespeitaIdiomaAtivo() {
+        incluirCarteira(ID_CARTEIRA, "Ana");
+        LocalDate data = LocalDate.of(2026, 2, 1);
+        precos.put(data, new BigDecimal("1234.50"));
+        precos.put(LocalDate.now(), new BigDecimal("1234.50"));
+        incluirMovimentacao(data, TipoOperacao.COMPRA, "1");
+
+        I18n.setIdioma(Idioma.INGLES);
+        try {
+            RelatorioCarteiraDTO.Historico historico = controller.gerarHistorico(ID_CARTEIRA);
+            DateTimeFormatter fmtEn = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
+                    .withLocale(Idioma.INGLES.getLocale());
+
+            assertEquals(data.format(fmtEn), historico.movimentos().get(0).data());
+            assertTrue(historico.movimentos().get(0).cotacao().contains("$1,234.50"));
+        } finally {
+            I18n.setIdioma(Idioma.PORTUGUES);
+        }
     }
 
     // ---------- apoio ----------

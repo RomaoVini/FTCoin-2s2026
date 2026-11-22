@@ -16,20 +16,26 @@ import java.util.List;
  * @param titular          nome do titular da carteira
  * @param corretora        corretora da carteira
  * @param saldoQuantidade  quantidade atual de FTCoins (Sd. qtd)
- * @param saldoFinanceiro  valor da carteira a custo médio (Sd. Fin.)
+ * @param saldoFinanceiro  valor total da posição pelo custo médio (quantidade × custo médio)
+ * @param custoMedio       custo médio unitário de aquisição
+ * @param saldoMercado     valor total da posição pela cotação atual
  */
 public record RelatorioCarteiraDTO(int id, String titular, String corretora,
-                                   String saldoQuantidade, String saldoFinanceiro) {
+                                   String saldoQuantidade, String saldoFinanceiro,
+                                   String custoMedio, String saldoMercado) {
 
     /**
      * Linha do histórico de movimentações de uma carteira.
      *
-     * @param data       data da operação
-     * @param tipoChave  chave de internacionalização do tipo (compra ou venda)
-     * @param quantidade quantidade movimentada
-     * @param cotacao    cotação da FTCoin na data da operação
+     * @param data         data da operação
+     * @param tipoChave    chave de internacionalização do tipo (compra ou venda)
+     * @param quantidade   quantidade movimentada
+     * @param cotacao      cotação da FTCoin na data da operação
+     * @param custoMedio   custo médio unitário após a operação
+     * @param saldoMercado valor de mercado do saldo após a operação, usando a cotação da data
      */
-    public record Movimento(String data, String tipoChave, String quantidade, String cotacao) { }
+    public record Movimento(String data, String tipoChave, String quantidade, String cotacao,
+                            String custoMedio, String saldoMercado) { }
 
     /**
      * Relatório de histórico de movimentações de uma carteira.

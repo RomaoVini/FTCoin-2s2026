@@ -117,7 +117,8 @@ public class RelatorioView {
     }
 
     /**
-     * Exibe o relatório de saldo atual de uma carteira (quantidade de FTCoins e saldo financeiro).
+     * Exibe o relatório de saldo atual de uma carteira (quantidade, custo médio,
+     * saldo financeiro a custo médio e valoração a mercado).
      *
      * @param d dados do saldo, já formatados pelo controlador
      */
@@ -128,6 +129,8 @@ public class RelatorioView {
         System.out.println(I18n.get("report.wallet.currentBalance.broker") + " " + d.corretora());
         System.out.println(I18n.get("report.wallet.currentBalance.balance") + " " + d.saldoQuantidade());
         System.out.println(I18n.get("report.wallet.currentBalance.financialBalance") + " " + d.saldoFinanceiro());
+        System.out.println(I18n.get("report.wallet.gainLoss.table.averageCost") + ": " + d.custoMedio());
+        System.out.println(I18n.get("report.wallet.gainLoss.marketBalance") + " " + d.saldoMercado());
     }
 
     /**
@@ -146,14 +149,18 @@ public class RelatorioView {
             console.exibirAlerta(I18n.get("report.wallet.history.empty"));
             return;
         }
-        System.out.printf("%-12s %-10s %-18s %-15s%n",
+        String formato = "%-14s %-10s %-16s %-15s %-15s %-18s%n";
+        System.out.printf(formato,
                 I18n.get("report.wallet.history.table.date"),
                 I18n.get("report.wallet.history.table.type"),
                 I18n.get("report.wallet.history.table.quantity"),
-                I18n.get("report.wallet.history.table.quote"));
+                I18n.get("report.wallet.history.table.quote"),
+                I18n.get("report.wallet.gainLoss.table.averageCost"),
+                I18n.get("report.wallet.gainLoss.marketBalance"));
         for (RelatorioCarteiraDTO.Movimento m : h.movimentos()) {
-            System.out.printf("%-12s %-10s %-18s %-15s%n",
-                    m.data(), I18n.get(m.tipoChave()), m.quantidade(), m.cotacao());
+            System.out.printf(formato,
+                    m.data(), I18n.get(m.tipoChave()), m.quantidade(), m.cotacao(),
+                    m.custoMedio(), m.saldoMercado());
         }
     }
 

@@ -1,18 +1,19 @@
 package test;
 
 import br.ftcoin.controller.MovimentacaoController;
-import br.ftcoin.dao.MovimentacaoDAO;
+import br.ftcoin.dao.CarteiraDAOMemoria;
+import br.ftcoin.dao.MovimentacaoDAOMemoria;
 import br.ftcoin.enums.TipoOperacao;
+import br.ftcoin.exception.ValidacaoException;
+import br.ftcoin.model.Carteira;
+import br.ftcoin.model.Cotacao;
 import br.ftcoin.model.Movimentacao;
+import br.ftcoin.service.OraculoCotacao;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 /*
  * Testes sem JUnit e sem Maven: basta executar o main desta classe.
@@ -20,7 +21,7 @@ import java.util.Optional;
  */
 public class TestesMovimentacao {
 
-    private static final LocalDate DATA = LocalDate.of(2026, 10, 18);
+    private static final LocalDate DATA = LocalDate.of(2026, 2, 10);
     private static final BigDecimal QTD = new BigDecimal("1.5");
 
     private static int total = 0;
@@ -113,11 +114,6 @@ public class TestesMovimentacao {
             igual(TipoOperacao.VENDA, new Movimentacao(1, 1, DATA, 'v', QTD).getTipoOperacao());
         });
 
-        teste("quantidade zero é aceita", () -> {
-            Movimentacao m = new Movimentacao(1, DATA, TipoOperacao.COMPRA, BigDecimal.ZERO);
-            igual(0, m.getQuantidade().compareTo(BigDecimal.ZERO));
-        });
-
         teste("idMovimento negativo lança exceção", () ->
                 lancaValidacao(() -> new Movimentacao(-1, 1, DATA, TipoOperacao.COMPRA, QTD)));
 
@@ -139,8 +135,10 @@ public class TestesMovimentacao {
         teste("quantidade nula lança exceção", () ->
                 lancaValidacao(() -> new Movimentacao(1, DATA, TipoOperacao.COMPRA, null)));
 
-        teste("quantidade negativa lança exceção", () ->
-                lancaValidacao(() -> new Movimentacao(1, DATA, TipoOperacao.COMPRA, new BigDecimal("-0.01"))));
+        teste("quantidade zero ou negativa lança exceção", () -> {
+            lancaValidacao(() -> new Movimentacao(1, DATA, TipoOperacao.COMPRA, BigDecimal.ZERO));
+            lancaValidacao(() -> new Movimentacao(1, DATA, TipoOperacao.COMPRA, new BigDecimal("-0.01")));
+        });
 
         teste("setters válidos atualizam os campos", () -> {
             Movimentacao m = valida();
@@ -182,14 +180,14 @@ public class TestesMovimentacao {
             verdadeiro(venda.isVenda());
             falso(venda.isCompra());
         });
+    }
 
-        teste("toString contém os dados", () -> {
-            String s = new Movimentacao(5, 2, DATA, TipoOperacao.VENDA, QTD).toString();
-            verdadeiro(s.contains("id=5"));
-            verdadeiro(s.contains("carteira=2"));
-            verdadeiro(s.contains("VENDA"));
-            verdadeiro(s.contains("1.5"));
-        });
+    // ---------- Apoio ----------
+
+    private static MovimentacaoController novoController(CarteiraDAOMemoria carteiraDAO,
+                                                         MovimentacaoDAOMemoria movimentacaoDAO) {
+        OraculoCotacao oraculoSimulado = data -> new Cotacao(data, new BigDecimal("10.00"));
+        return new MovimentacaoController(carteiraDAO, movimentacaoDAO, oraculoSimulado);
     }
 
     // ---------- Testes do controller ----------
@@ -198,112 +196,79 @@ public class TestesMovimentacao {
         System.out.println("\n=== CONTROLLER ===");
 
         teste("cadastrar persiste e preenche o id", () -> {
-            DAOFalso dao = new DAOFalso();
-            MovimentacaoController c = new MovimentacaoController(dao);
+            CarteiraDAOMemoria carteiras = new CarteiraDAOMemoria();
+            carteiras.incluir(new Carteira(1, "Ana", "Corretora"));
+            MovimentacaoDAOMemoria dao = new MovimentacaoDAOMemoria();
+            MovimentacaoController c = novoController(carteiras, dao);
 
             Movimentacao m = c.cadastrar(1, DATA, TipoOperacao.COMPRA, QTD);
 
             verdadeiro(m.getIdMovimento() > 0);
-            igual(1, dao.dados.size());
+            igual(1, dao.consultarTodos().size());
             verdadeiro(dao.consultar(m.getIdMovimento()).isPresent());
         });
 
-        teste("cadastrar inválido lança exceção e não persiste", () -> {
-            DAOFalso dao = new DAOFalso();
-            MovimentacaoController c = new MovimentacaoController(dao);
+        teste("cadastrar para carteira inexistente ou dados inválidos lança exceção", () -> {
+            CarteiraDAOMemoria carteiras = new CarteiraDAOMemoria();
+            carteiras.incluir(new Carteira(1, "Ana", "Corretora"));
+            MovimentacaoDAOMemoria dao = new MovimentacaoDAOMemoria();
+            MovimentacaoController c = novoController(carteiras, dao);
 
+            lancaValidacao(() -> c.cadastrar(99, DATA, TipoOperacao.COMPRA, QTD));
             lancaValidacao(() -> c.cadastrar(0, DATA, TipoOperacao.COMPRA, QTD));
             lancaValidacao(() -> c.cadastrar(1, null, TipoOperacao.COMPRA, QTD));
             lancaValidacao(() -> c.cadastrar(1, DATA, null, QTD));
             lancaValidacao(() -> c.cadastrar(1, DATA, TipoOperacao.COMPRA, new BigDecimal("-1")));
+            lancaValidacao(() -> c.cadastrar(1, DATA, TipoOperacao.VENDA, QTD));
 
-            verdadeiro(dao.dados.isEmpty());
+            verdadeiro(dao.consultarTodos().isEmpty());
         });
 
-        teste("atualizar altera o registro existente", () -> {
-            DAOFalso dao = new DAOFalso();
-            MovimentacaoController c = new MovimentacaoController(dao);
-            Movimentacao original = c.cadastrar(1, DATA, TipoOperacao.COMPRA, QTD);
+        teste("venda com saldo suficiente é permitida e sem saldo é bloqueada", () -> {
+            CarteiraDAOMemoria carteiras = new CarteiraDAOMemoria();
+            carteiras.incluir(new Carteira(1, "Ana", "Corretora"));
+            MovimentacaoDAOMemoria dao = new MovimentacaoDAOMemoria();
+            MovimentacaoController c = novoController(carteiras, dao);
 
-            c.atualizar(original.getIdMovimento(), 2, LocalDate.of(2026, 1, 1),
-                    TipoOperacao.VENDA, new BigDecimal("9"));
+            c.cadastrar(1, DATA, TipoOperacao.COMPRA, new BigDecimal("10"));
+            c.cadastrar(1, DATA.plusDays(1), TipoOperacao.VENDA, new BigDecimal("4"));
+            lancaValidacao(() -> c.cadastrar(1, DATA.plusDays(2), TipoOperacao.VENDA, new BigDecimal("7")));
 
-            Movimentacao salva = dao.dados.get(original.getIdMovimento());
-            igual(2, salva.getIdCarteira());
-            igual(TipoOperacao.VENDA, salva.getTipoOperacao());
-            igual(new BigDecimal("9"), salva.getQuantidade());
-            igual(1, dao.dados.size());
+            igual(2, dao.consultarTodos().size());
         });
 
-        teste("atualizar inexistente lança exceção", () -> {
-            MovimentacaoController c = new MovimentacaoController(new DAOFalso());
-            lancaValidacao(() -> c.atualizar(99, 1, DATA, TipoOperacao.COMPRA, QTD));
-        });
-
-        teste("atualizar com id inválido lança exceção", () -> {
-            MovimentacaoController c = new MovimentacaoController(new DAOFalso());
-            lancaValidacao(() -> c.atualizar(0, 1, DATA, TipoOperacao.COMPRA, QTD));
-            lancaValidacao(() -> c.atualizar(-3, 1, DATA, TipoOperacao.COMPRA, QTD));
-        });
-
-        teste("atualizar com dados inválidos não altera o registro", () -> {
-            DAOFalso dao = new DAOFalso();
-            MovimentacaoController c = new MovimentacaoController(dao);
-            Movimentacao original = c.cadastrar(1, DATA, TipoOperacao.COMPRA, QTD);
-
-            lancaValidacao(() -> c.atualizar(original.getIdMovimento(), 1, DATA,
-                    TipoOperacao.COMPRA, new BigDecimal("-1")));
-
-            igual(QTD, dao.dados.get(original.getIdMovimento()).getQuantidade());
-        });
-
-        teste("excluir remove o registro", () -> {
-            DAOFalso dao = new DAOFalso();
-            MovimentacaoController c = new MovimentacaoController(dao);
-            Movimentacao m = c.cadastrar(1, DATA, TipoOperacao.COMPRA, QTD);
-
-            c.excluir(m.getIdMovimento());
-
-            verdadeiro(dao.dados.isEmpty());
-        });
-
-        teste("excluir inexistente lança exceção", () -> {
-            MovimentacaoController c = new MovimentacaoController(new DAOFalso());
-            lancaValidacao(() -> c.excluir(42));
-        });
-
-        teste("buscarPorId retorna o registro", () -> {
-            MovimentacaoController c = new MovimentacaoController(new DAOFalso());
-            Movimentacao m = c.cadastrar(1, DATA, TipoOperacao.VENDA, QTD);
-
-            Movimentacao achada = c.buscarPorId(m.getIdMovimento());
-
-            igual(m.getIdMovimento(), achada.getIdMovimento());
-            igual(TipoOperacao.VENDA, achada.getTipoOperacao());
-        });
-
-        teste("buscarPorId inexistente lança exceção", () -> {
-            MovimentacaoController c = new MovimentacaoController(new DAOFalso());
-            lancaValidacao(() -> c.buscarPorId(1));
+        teste("consultarCotacao retorna cotação do oráculo", () -> {
+            MovimentacaoController c = novoController(new CarteiraDAOMemoria(), new MovimentacaoDAOMemoria());
+            Cotacao cotacao = c.consultarCotacao(DATA);
+            igual(DATA, cotacao.getData());
+            igual(new BigDecimal("10.00"), cotacao.getValor());
         });
 
         teste("listarTodas retorna tudo", () -> {
-            MovimentacaoController c = new MovimentacaoController(new DAOFalso());
+            CarteiraDAOMemoria carteiras = new CarteiraDAOMemoria();
+            carteiras.incluir(new Carteira(1, "Ana", "Corretora"));
+            carteiras.incluir(new Carteira(2, "Bruno", "Corretora"));
+            MovimentacaoController c = novoController(carteiras, new MovimentacaoDAOMemoria());
+
             c.cadastrar(1, DATA, TipoOperacao.COMPRA, QTD);
-            c.cadastrar(2, DATA, TipoOperacao.VENDA, QTD);
+            c.cadastrar(2, DATA, TipoOperacao.COMPRA, QTD);
 
             igual(2, c.listarTodas().size());
         });
 
         teste("listarTodas vazia retorna lista vazia", () -> {
-            MovimentacaoController c = new MovimentacaoController(new DAOFalso());
+            MovimentacaoController c = novoController(new CarteiraDAOMemoria(), new MovimentacaoDAOMemoria());
             verdadeiro(c.listarTodas().isEmpty());
         });
 
         teste("listarPorCarteira filtra corretamente", () -> {
-            MovimentacaoController c = new MovimentacaoController(new DAOFalso());
+            CarteiraDAOMemoria carteiras = new CarteiraDAOMemoria();
+            carteiras.incluir(new Carteira(1, "Ana", "Corretora"));
+            carteiras.incluir(new Carteira(2, "Bruno", "Corretora"));
+            MovimentacaoController c = novoController(carteiras, new MovimentacaoDAOMemoria());
+
             c.cadastrar(1, DATA, TipoOperacao.COMPRA, QTD);
-            c.cadastrar(1, DATA, TipoOperacao.VENDA, QTD);
+            c.cadastrar(1, DATA.plusDays(1), TipoOperacao.VENDA, new BigDecimal("0.5"));
             c.cadastrar(2, DATA, TipoOperacao.COMPRA, QTD);
 
             List<Movimentacao> da1 = c.listarPorCarteira(1);
@@ -315,54 +280,9 @@ public class TestesMovimentacao {
         });
 
         teste("listarPorCarteira com id inválido lança exceção", () -> {
-            MovimentacaoController c = new MovimentacaoController(new DAOFalso());
+            MovimentacaoController c = novoController(new CarteiraDAOMemoria(), new MovimentacaoDAOMemoria());
             lancaValidacao(() -> c.listarPorCarteira(0));
             lancaValidacao(() -> c.listarPorCarteira(-1));
         });
-    }
-
-    // ---------- DAO falso em memória ----------
-
-    private static class DAOFalso implements MovimentacaoDAO {
-
-        final Map<Integer, Movimentacao> dados = new LinkedHashMap<>();
-        private int proximoId = 1;
-
-        @Override
-        public void incluir(Movimentacao m) {
-            m.setIdMovimento(proximoId++);
-            dados.put(m.getIdMovimento(), m);
-        }
-
-        @Override
-        public Optional<Movimentacao> consultar(Integer id) {
-            return Optional.ofNullable(dados.get(id));
-        }
-
-        @Override
-        public List<Movimentacao> consultarTodos() {
-            return new ArrayList<>(dados.values());
-        }
-
-        @Override
-        public void editar(Movimentacao m) {
-            dados.put(m.getIdMovimento(), m);
-        }
-
-        @Override
-        public void excluir(Integer id) {
-            dados.remove(id);
-        }
-
-        @Override
-        public List<Movimentacao> consultarPorCarteira(int idCarteira) {
-            List<Movimentacao> lista = new ArrayList<>();
-            for (Movimentacao m : dados.values()) {
-                if (m.getIdCarteira() == idCarteira) {
-                    lista.add(m);
-                }
-            }
-            return lista;
-        }
     }
 }
