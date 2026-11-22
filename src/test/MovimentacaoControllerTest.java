@@ -1,4 +1,4 @@
-package br.ftcoin.controller;
+package test;
 
 import br.ftcoin.dao.CarteiraDAOMemoria;
 import br.ftcoin.dao.MovimentacaoDAOMemoria;
@@ -10,6 +10,7 @@ import br.ftcoin.model.Cotacao;
 import br.ftcoin.model.Movimentacao;
 import br.ftcoin.service.OraculoCotacao;
 import br.ftcoin.service.OraculoException;
+import br.ftcoin.controller.MovimentacaoController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

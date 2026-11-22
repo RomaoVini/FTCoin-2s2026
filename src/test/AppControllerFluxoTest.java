@@ -1,7 +1,8 @@
-package br.ftcoin.controller;
+package test;
 
 import br.ftcoin.enums.Idioma;
 import br.ftcoin.util.I18n;
+import br.ftcoin.controller.AppController;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

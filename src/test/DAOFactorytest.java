@@ -1,6 +1,13 @@
-package br.ftcoin.dao;
+package test;
 
 import br.ftcoin.model.Carteira;
+import br.ftcoin.dao.CarteiraDAO;
+import br.ftcoin.dao.CarteiraDAOMemoria;
+import br.ftcoin.dao.DAOFactory;
+import br.ftcoin.dao.MariaDBDAOFactory;
+import br.ftcoin.dao.MemoriaDAOFactory;
+import br.ftcoin.dao.MovimentacaoDAO;
+import br.ftcoin.dao.MovimentacaoDAOMemoria;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

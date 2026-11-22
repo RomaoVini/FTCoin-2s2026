@@ -1,7 +1,10 @@
-package br.ftcoin.model;
+package test;
 
 import br.ftcoin.enums.TipoOperacao;
 import br.ftcoin.exception.ValidacaoException;
+import br.ftcoin.model.CarteiraFinanceira;
+import br.ftcoin.model.Cotacao;
+import br.ftcoin.model.Movimentacao;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

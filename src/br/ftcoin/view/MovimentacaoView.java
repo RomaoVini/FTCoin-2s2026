@@ -6,6 +6,7 @@ import br.ftcoin.exception.ValidacaoException;
 import br.ftcoin.model.Cotacao;
 import br.ftcoin.model.Movimentacao;
 import br.ftcoin.util.I18n;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -35,16 +36,11 @@ public class MovimentacaoView {
             "transactionMenu.quoteCoin"
     );
 
-    /** Controlador que concentra as regras de negócio de movimentações e consulta de cotações. */
-    /** private final MovimentacaoController controller; */
+    /** Formatador de data no padrão brasileiro (dd/MM/uuuu). */
+    private static final DateTimeFormatter FORMATO_BR = DateTimeFormatter.ofPattern("dd/MM/uuuu");
 
-    /**Mudanças de movimentação controller de private para public para permitir acesso de outras classes*/
-    public MovimentacaoController(MenuView menuView, CarteiraDAO carteiraDAO, MovimentacaoDAO movimentacaoDAO, OraculoCotacao oraculo){
-        this(carteiraDAO, movimentacaoDAO, oraculo);
-        this.menuView = Objects.requireNonNull(menuView, "MenuView não pode ser nula.");
-        this.consoleUtils = menuView.getConsoleUtils();
-        this.view = new MovimentacaoView(this.consoleUtils, this);
-    }
+    /** Controlador que concentra as regras de negócio de movimentações e consulta de cotações. */
+    private final MovimentacaoController controller;
 
     /** Utilitário de console para leitura de entradas e exibição de mensagens formatadas. */
     private final ConsoleUtils console;
@@ -150,15 +146,13 @@ public class MovimentacaoView {
     }
 
     /**
-     * Solicita e lê uma data opcional no formato ISO ({@code yyyy-MM-dd}).
+     * Solicita e lê uma data opcional nos formatos {@code dd/MM/yyyy} ou ISO ({@code yyyy-MM-dd}).
      * Se o usuário apenas pressionar ENTER, a data atual é utilizada.
      * O prompt é repetido enquanto o formato informado for inválido.
      *
      * @param prompt Texto de instrução exibido antes da leitura.
      * @return Data informada pelo usuário ou {@link LocalDate#now()} se a entrada for vazia.
      */
-    private static final DateTimeFormatter FORMATO_BR = DateTimeFormatter.ofPattern("dd/MM/uuuu");
-
     private LocalDate lerDataOpcional(String prompt) {
         while (true) {
             String entrada = console.lerStringOpcional(prompt);

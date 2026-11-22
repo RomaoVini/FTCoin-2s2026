@@ -8,7 +8,7 @@ import br.ftcoin.model.Cotacao;
 import br.ftcoin.model.Movimentacao;
 import br.ftcoin.service.OraculoCotacao;
 import br.ftcoin.service.OraculoException;
-import br.ftcoin.view.ConsoleUtils;
+import br.ftcoin.util.I18n;
 import br.ftcoin.view.MenuView;
 import br.ftcoin.view.MovimentacaoView;
 
@@ -17,7 +17,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;  
+import java.util.Objects;
+
 /**
  * Controlador responsável por gerenciar as operações financeiras de {@link Movimentacao}
  * (Compra e Venda de moedas virtuais) e a consulta de cotações junto ao {@link OraculoCotacao}.
@@ -40,9 +41,6 @@ public class MovimentacaoController {
     /** View genérica de menus; permanece {@code null} quando o controlador é usado sem CLI (ex.: testes). */
     private MenuView menuView;
 
-    /** Utilitário de console para leitura de dados e exibição de mensagens na CLI. */
-    private ConsoleUtils consoleUtils;
-
     /**
      * Constrói o controlador injetando os DAOs necessários.
      * Ideal para execução de regras de negócio e testes unitários sem interface CLI.
@@ -53,9 +51,9 @@ public class MovimentacaoController {
      * @throws NullPointerException se qualquer dependência for nula.
      */
     public MovimentacaoController(CarteiraDAO carteiraDAO, MovimentacaoDAO movimentacaoDAO, OraculoCotacao oraculo) {
-        this.carteiraDAO = Objects.requireNonNull(carteiraDAO, "CarteiraDAO não pode ser nulo.");
-        this.movimentacaoDAO = Objects.requireNonNull(movimentacaoDAO, "MovimentacaoDAO não pode ser nulo.");
-        this.oraculo = Objects.requireNonNull(oraculo, "Serviço de cotações não pode ser nulo.");
+        this.carteiraDAO = Objects.requireNonNull(carteiraDAO, () -> I18n.get("generic.error.nullParameter"));
+        this.movimentacaoDAO = Objects.requireNonNull(movimentacaoDAO, () -> I18n.get("generic.error.nullParameter"));
+        this.oraculo = Objects.requireNonNull(oraculo, () -> I18n.get("generic.error.nullParameter"));
     }
 
     /**
@@ -69,8 +67,7 @@ public class MovimentacaoController {
      */
     public MovimentacaoController(MenuView menuView, CarteiraDAO carteiraDAO, MovimentacaoDAO movimentacaoDAO, OraculoCotacao oraculo) {
         this(carteiraDAO, movimentacaoDAO, oraculo);
-        this.menuView = Objects.requireNonNull(menuView, "MenuView não pode ser nula.");
-        this.consoleUtils = menuView.getConsoleUtils();
+        this.menuView = Objects.requireNonNull(menuView, () -> I18n.get("generic.error.nullParameter"));
     }
 
     /**
@@ -81,9 +78,9 @@ public class MovimentacaoController {
      */
     public void exibirMenuMovimentacao() {
         if (this.menuView == null) {
-            throw new IllegalStateException("MenuView não foi inicializada neste controlador.");
+            throw new IllegalStateException(I18n.get("generic.error.nullParameter"));
         }
-        new MovimentacaoView(consoleUtils, this).exibirMenu();
+        new MovimentacaoView(menuView.getConsoleUtils(), this).exibirMenu();
     }
 
     /**
@@ -103,7 +100,7 @@ public class MovimentacaoController {
 
         // Instancia primeiro para acionar as validações estruturais do Model (data nula, qtd <= 0, etc.)
         Movimentacao novaMovimentacao = new Movimentacao(idCarteira, data, tipo, quantidade);
-        
+
         if (tipo == TipoOperacao.VENDA) {
             validarSaldoAoLongoDoTempo(idCarteira, novaMovimentacao);
         }
@@ -120,7 +117,7 @@ public class MovimentacaoController {
      * @throws OraculoException se não houver cotação ou se a consulta ao oráculo falhar.
      */
     public Cotacao consultarCotacao(LocalDate data) {
-        Objects.requireNonNull(data, "A data para consulta de cotação não pode ser nula.");
+        Objects.requireNonNull(data, () -> I18n.get("transaction.error.dateRequired"));
         return oraculo.obterCotacao(data);
     }
 
@@ -177,48 +174,6 @@ public class MovimentacaoController {
             if (saldo.signum() < 0) {
                 throw new ValidacaoException("transaction.sell.insufficientBalance");
             }
-        }
-    }
-
-    /**
-     * Conduz, via CLI, o fluxo de uma compra ou venda: lê o identificador da carteira e a quantidade,
-     * registra a movimentação com a data atual e exibe o resultado (sucesso ou erro) ao usuário.
-     *
-     * @param tipo Tipo da operação a ser registrada ({@link TipoOperacao#COMPRA} ou {@link TipoOperacao#VENDA}).
-     */
-    private void processarOperacaoCLI(TipoOperacao tipo) {
-        try {
-            int idCarteira = consoleUtils.lerInteiro(I18n.get("wallet.view.prompt.id"));
-            String qtdTexto = consoleUtils.lerString(I18n.get("transaction.view.prompt.quantity"));
-            BigDecimal quantidade = new BigDecimal(qtdTexto.replace(",", "."));
-
-            cadastrar(idCarteira, LocalDate.now(), tipo, quantidade);
-
-            String chaveSucesso = (tipo == TipoOperacao.COMPRA) 
-                    ? "transaction.buy.success" 
-                    : "transaction.sell.success";
-            consoleUtils.exibirSucesso(I18n.get(chaveSucesso));
-        } catch (NumberFormatException e) {
-            consoleUtils.exibirErro(I18n.get("generic.confirmInvalid"));
-        } catch (ValidacaoException e) {
-            consoleUtils.exibirErro(e.getMessage());
-        }
-    }
-
-    /**
-     * Consulta no oráculo a cotação da data atual e a exibe no console.
-     * Em caso de falha do oráculo, exibe um alerta com a mensagem do erro.
-     */
-    private void exibirCotacaoAtualCLI() {
-        try {
-            Cotacao cotacao = consultarCotacao(LocalDate.now());
-            System.out.println(ConsoleUtils.NEGRITO + I18n.get("report.oracle.display.title") + ConsoleUtils.RESET);
-            System.out.println(I18n.get("report.oracle.display.date") + " " + cotacao.getData());
-            System.out.println(I18n.get("report.oracle.display.price") + " R$ " + cotacao.getValor());
-            consoleUtils.pausar();
-        } catch (OraculoException e) {
-            consoleUtils.exibirAlerta(e.getMessage());
-            consoleUtils.pausar();
         }
     }
 }

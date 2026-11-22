@@ -1,4 +1,4 @@
-package br.ftcoin.view;
+package test;
 
 import br.ftcoin.controller.RelatorioController;
 import br.ftcoin.dao.CarteiraDAOMemoria;
@@ -9,6 +9,7 @@ import br.ftcoin.model.Cotacao;
 import br.ftcoin.service.OraculoCotacao;
 import br.ftcoin.service.OraculoException;
 import br.ftcoin.util.I18n;
+import br.ftcoin.view.MenuView;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

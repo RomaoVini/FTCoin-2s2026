@@ -1,7 +1,8 @@
-package br.ftcoin.model;
+package test;
 
 import br.ftcoin.enums.TipoOperacao;
 import br.ftcoin.exception.ValidacaoException;
+import br.ftcoin.model.Movimentacao;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;

@@ -1,6 +1,7 @@
-package br.ftcoin.enums;
+package test;
 
 import br.ftcoin.exception.ValidacaoException;
+import br.ftcoin.enums.TipoOperacao;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

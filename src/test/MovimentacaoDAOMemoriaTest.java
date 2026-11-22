@@ -1,8 +1,9 @@
-package br.ftcoin.dao;
+package test;
 
 import br.ftcoin.enums.TipoOperacao;
 import br.ftcoin.exception.ValidacaoException;
 import br.ftcoin.model.Movimentacao;
+import br.ftcoin.dao.MovimentacaoDAOMemoria;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

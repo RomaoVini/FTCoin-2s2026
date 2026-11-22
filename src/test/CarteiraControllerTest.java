@@ -1,8 +1,9 @@
-package br.ftcoin.controller;
+package test;
 
 import br.ftcoin.dao.CarteiraDAOMemoria;
 import br.ftcoin.exception.ValidacaoException;
 import br.ftcoin.model.Carteira;
+import br.ftcoin.controller.CarteiraController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
