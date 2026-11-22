@@ -4,17 +4,18 @@ import br.ftcoin.dao.CarteiraDAO;
 import br.ftcoin.dao.MovimentacaoDAO;
 import br.ftcoin.enums.TipoOperacao;
 import br.ftcoin.exception.ValidacaoException;
-import br.ftcoin.model.CarteiraFinanceira;
 import br.ftcoin.model.Cotacao;
 import br.ftcoin.model.Movimentacao;
 import br.ftcoin.service.OraculoCotacao;
 import br.ftcoin.service.OraculoException;
-import br.ftcoin.util.I18n;
 import br.ftcoin.view.ConsoleUtils;
 import br.ftcoin.view.MenuView;
+import br.ftcoin.view.MovimentacaoView;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
@@ -74,25 +75,7 @@ public class MovimentacaoController {
         if (this.menuView == null) {
             throw new IllegalStateException("MenuView não foi inicializada neste controlador.");
         }
-
-        List<String> opcoes = List.of(
-            "transactionMenu.buyCoin",   // 1. Comprar moeda virtual
-            "transactionMenu.sellCoin",  // 2. Vender moeda virtual
-            "transactionMenu.quoteCoin"  // 3. Cotar moeda virtual
-        );
-
-        while (true) {
-            int escolha = menuView.exibirEObterOpcao("transactionMenu.title", opcoes);
-            if (escolha == 0) {
-                return;
-            }
-
-            switch (escolha) {
-                case 1 -> processarOperacaoCLI(TipoOperacao.COMPRA);
-                case 2 -> processarOperacaoCLI(TipoOperacao.VENDA);
-                case 3 -> exibirCotacaoAtualCLI();
-            }
-        }
+        new MovimentacaoView(consoleUtils, this).exibirMenu();
     }
 
     /**
@@ -114,7 +97,7 @@ public class MovimentacaoController {
         Movimentacao novaMovimentacao = new Movimentacao(idCarteira, data, tipo, quantidade);
 
         if (tipo == TipoOperacao.VENDA) {
-            validarSaldoParaVenda(idCarteira, quantidade);
+            validarSaldoAoLongoDoTempo(idCarteira, novaMovimentacao);
         }
 
         movimentacaoDAO.incluir(novaMovimentacao);
@@ -156,46 +139,26 @@ public class MovimentacaoController {
         return movimentacaoDAO.consultarPorCarteira(idCarteira);
     }
 
-    private void validarSaldoParaVenda(int idCarteira, BigDecimal quantidadeVenda) {
-        BigDecimal saldoAtual = calcularSaldoMoedas(idCarteira);
-        if (saldoAtual.compareTo(quantidadeVenda) < 0) {
-            throw new ValidacaoException("transaction.sell.insufficientBalance");
+    /**
+     * Garante que o saldo de moedas nunca fique negativo em nenhum momento do histórico,
+     * considerando as datas das operações (inclusive a que está sendo cadastrada).
+     *
+     * @param idCarteira identificador da carteira
+     * @param nova       movimentação que será incluída
+     * @throws ValidacaoException se alguma venda ficaria sem saldo suficiente na sua data
+     */
+    private void validarSaldoAoLongoDoTempo(int idCarteira, Movimentacao nova) {
+        List<Movimentacao> todas = new ArrayList<>(movimentacaoDAO.consultarPorCarteira(idCarteira));
+        todas.sort(Comparator.comparingInt(Movimentacao::getIdMovimento));
+        todas.add(nova);
+        todas.sort(Comparator.comparing(Movimentacao::getDataOperacao)); // estável: no mesmo dia mantém a ordem de inclusão
+        BigDecimal saldo = BigDecimal.ZERO;
+        for (Movimentacao m : todas) {
+            saldo = m.isCompra() ? saldo.add(m.getQuantidade()) : saldo.subtract(m.getQuantidade());
+            if (saldo.signum() < 0) {
+                throw new ValidacaoException("transaction.sell.insufficientBalance");
+            }
         }
     }
 
-    private BigDecimal calcularSaldoMoedas(int idCarteira) {
-        return CarteiraFinanceira.calcularSaldoQuantidade(movimentacaoDAO.consultarPorCarteira(idCarteira));
-    }
-
-    private void processarOperacaoCLI(TipoOperacao tipo) {
-        try {
-            int idCarteira = consoleUtils.lerInteiro(I18n.get("wallet.view.prompt.id"));
-            String qtdTexto = consoleUtils.lerString(I18n.get("transaction.view.prompt.quantity"));
-            BigDecimal quantidade = new BigDecimal(qtdTexto.replace(",", "."));
-
-            cadastrar(idCarteira, LocalDate.now(), tipo, quantidade);
-
-            String chaveSucesso = (tipo == TipoOperacao.COMPRA) 
-                    ? "transaction.buy.success" 
-                    : "transaction.sell.success";
-            consoleUtils.exibirSucesso(I18n.get(chaveSucesso));
-        } catch (NumberFormatException e) {
-            consoleUtils.exibirErro(I18n.get("generic.confirmInvalid"));
-        } catch (ValidacaoException e) {
-            consoleUtils.exibirErro(e.getMessage());
-        }
-    }
-
-    private void exibirCotacaoAtualCLI() {
-        try {
-            Cotacao cotacao = consultarCotacao(LocalDate.now());
-            System.out.println(ConsoleUtils.NEGRITO + I18n.get("report.oracle.display.title") + ConsoleUtils.RESET);
-            System.out.println(I18n.get("report.oracle.display.date") + " " + cotacao.getData());
-            System.out.println(I18n.get("report.oracle.display.price") + " R$ " + cotacao.getValor());
-            consoleUtils.pausar();
-        } catch (OraculoException e) {
-            consoleUtils.exibirAlerta(e.getMessage());
-            consoleUtils.pausar();
-        }
-    }
 }
