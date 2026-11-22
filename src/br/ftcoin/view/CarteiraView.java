@@ -4,7 +4,6 @@ import br.ftcoin.controller.CarteiraController;
 import br.ftcoin.exception.ValidacaoException;
 import br.ftcoin.model.Carteira;
 import br.ftcoin.util.I18n;
-
 import java.util.List;
 import java.util.Objects;
 
@@ -27,7 +26,8 @@ public class CarteiraView {
             "walletView.option.register",
             "walletView.option.list",
             "walletView.option.edit",
-            "walletView.option.delete"
+            "walletView.option.delete",
+            "walletView.option.search" 
     );
 
     /** Controlador que concentra as regras de negócio e a persistência de carteiras. */
@@ -71,6 +71,7 @@ public class CarteiraView {
                     case 2 -> listar();
                     case 3 -> atualizar();
                     case 4 -> excluir();
+                    case 5 -> consultar(); 
                     default -> { /* 0 = voltar */ }
                 }
             } catch (ValidacaoException e) {
@@ -112,6 +113,17 @@ public class CarteiraView {
         carteiras.forEach(c -> System.out.println(formatar(c)));
     }
 
+    /**
+     * Fluxo de consulta: solicita o identificador, delega a busca ao controlador
+     * e exibe os dados da carteira encontrada. Se o ID for inválido ou não
+     * existir, a {@link ValidacaoException} é tratada em {@link #exibirMenu()}.
+     */
+    private void consultar() {
+        int id = console.lerInteiro(I18n.get("walletView.prompt.id"));
+        Carteira carteira = controller.buscarPorId(id);
+        System.out.println(formatar(carteira));
+    }
+    
     /**
      * Fluxo de edição: localiza a carteira pelo identificador, mostra seus dados atuais,
      * solicita novo titular e nova corretora e delega a atualização ao controlador.
