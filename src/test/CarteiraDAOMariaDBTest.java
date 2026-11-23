@@ -3,62 +3,172 @@ package test;
 import br.ftcoin.dao.CarteiraDAOMariaDB;
 import br.ftcoin.model.Carteira;
 import br.ftcoin.util.DatabaseConnection;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Proxy;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.Connection;
+import java.sql.Driver;
+import java.sql.DriverManager;
+import java.sql.DriverPropertyInfo;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.Properties;
+import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
 
 class CarteiraDAOMariaDBTest {
 
-    private MockedStatic<DatabaseConnection> dbStaticMock;
-    private DatabaseConnection dbInstanceMock;
-    private Connection connectionMock;
-    private PreparedStatement statementMock;
-    private ResultSet resultSetMock;
+    private static boolean criouEnvTemporario = false;
+    private Map<Integer, Object> params;
+    private List<Object[]> linhasRs;
+    private int cursorRs;
+    private int updateReturn;
+    private SQLException erroSql;
+    private Driver fakeDriver;
     private CarteiraDAOMariaDB dao;
 
-    @BeforeEach
-    void setUp() throws SQLException {
-        dbInstanceMock = mock(DatabaseConnection.class);
-        connectionMock = mock(Connection.class);
-        statementMock = mock(PreparedStatement.class);
-        resultSetMock = mock(ResultSet.class);
+    @BeforeAll
+    static void prepararAmbiente() throws Exception {
+        Path envPath = Path.of("mariadb.env");
+        if (!Files.exists(envPath)) {
+            Files.writeString(envPath, "MARIADB_USER=test_user\nMARIADB_PASSWORD=test_pass\n");
+            criouEnvTemporario = true;
+        }
+    }
 
-        dbStaticMock = mockStatic(DatabaseConnection.class);
-        dbStaticMock.when(DatabaseConnection::getInstancia).thenReturn(dbInstanceMock);
-        when(dbInstanceMock.getConexao()).thenReturn(connectionMock);
-        when(connectionMock.prepareStatement(anyString())).thenReturn(statementMock);
+    @AfterAll
+    static void limparAmbiente() throws Exception {
+        if (criouEnvTemporario) {
+            Files.deleteIfExists(Path.of("mariadb.env"));
+        }
+    }
+
+    @BeforeEach
+    void setUp() throws Exception {
+        resetarSingleton();
+
+        params = new HashMap<>();
+        linhasRs = new ArrayList<>();
+        cursorRs = -1;
+        updateReturn = 1;
+        erroSql = null;
+
+        ResultSet rsProxy = (ResultSet) Proxy.newProxyInstance(
+                ResultSet.class.getClassLoader(),
+                new Class<?>[]{ResultSet.class},
+                (proxy, method, args) -> {
+                    String name = method.getName();
+                    if ("next".equals(name)) {
+                        return ++cursorRs < linhasRs.size();
+                    }
+                    if ("getInt".equals(name) && "IdCarteira".equals(args[0])) {
+                        return linhasRs.get(cursorRs)[0];
+                    }
+                    if ("getString".equals(name)) {
+                        if ("Titular".equals(args[0])) return linhasRs.get(cursorRs)[1];
+                        if ("Corretora".equals(args[0])) return linhasRs.get(cursorRs)[2];
+                    }
+                    return null;
+                }
+        );
+
+        PreparedStatement psProxy = (PreparedStatement) Proxy.newProxyInstance(
+                PreparedStatement.class.getClassLoader(),
+                new Class<?>[]{PreparedStatement.class},
+                (proxy, method, args) -> {
+                    String name = method.getName();
+                    if (name.startsWith("set") && args != null && args.length >= 2) {
+                        params.put((Integer) args[0], args[1]);
+                        return null;
+                    }
+                    if ("executeUpdate".equals(name)) {
+                        if (erroSql != null) {
+                            throw erroSql;
+                        }
+                        return updateReturn;
+                    }
+                    if ("executeQuery".equals(name)) {
+                        if (erroSql != null) {
+                            throw erroSql;
+                        }
+                        cursorRs = -1;
+                        return rsProxy;
+                    }
+                    return null;
+                }
+        );
+
+        Connection conProxy = (Connection) Proxy.newProxyInstance(
+                Connection.class.getClassLoader(),
+                new Class<?>[]{Connection.class},
+                (proxy, method, args) -> {
+                    if ("isClosed".equals(method.getName())) {
+                        return false;
+                    }
+                    if ("prepareStatement".equals(method.getName())) {
+                        return psProxy;
+                    }
+                    return null;
+                }
+        );
+
+        fakeDriver = new Driver() {
+            @Override
+            public Connection connect(String url, Properties info) { return conProxy; }
+            @Override
+            public boolean acceptsURL(String url) { return url != null && url.startsWith("jdbc:mariadb:"); }
+            @Override
+            public DriverPropertyInfo[] getPropertyInfo(String url, Properties info) { return new DriverPropertyInfo[0]; }
+            @Override
+            public int getMajorVersion() { return 1; }
+            @Override
+            public int getMinorVersion() { return 0; }
+            @Override
+            public boolean jdbcCompliant() { return false; }
+            @Override
+            public Logger getParentLogger() { return Logger.getGlobal(); }
+        };
+        DriverManager.registerDriver(fakeDriver);
 
         dao = new CarteiraDAOMariaDB();
     }
 
     @AfterEach
-    void tearDown() {
-        dbStaticMock.close();
+    void tearDown() throws Exception {
+        if (fakeDriver != null) {
+            DriverManager.deregisterDriver(fakeDriver);
+        }
+        resetarSingleton();
+    }
+
+    private void resetarSingleton() throws Exception {
+        Field field = DatabaseConnection.class.getDeclaredField("instancia");
+        field.setAccessible(true);
+        field.set(null, null);
     }
 
     @Test
-    void incluir_carteiraValida_executaInsertComSucesso() throws SQLException {
-        Carteira c = new Carteira(1, "Alice", "Binance");
+    void incluir_carteiraValida_executaInsertComSucesso() {
+        dao.incluir(new Carteira(1, "Alice", "Binance"));
 
-        dao.incluir(c);
-
-        verify(statementMock).setInt(1, 1);
-        verify(statementMock).setString(2, "Alice");
-        verify(statementMock).setString(3, "Binance");
-        verify(statementMock).executeUpdate();
+        assertEquals(1, params.get(1));
+        assertEquals("Alice", params.get(2));
+        assertEquals("Binance", params.get(3));
     }
 
     @Test
@@ -67,26 +177,22 @@ class CarteiraDAOMariaDBTest {
     }
 
     @Test
-    void incluir_idDuplicadoSql1062_lancaIllegalArgumentException() throws SQLException {
-        when(statementMock.executeUpdate()).thenThrow(new SQLException("Duplicate entry", "23000", 1062));
+    void incluir_idDuplicadoSql1062_lancaIllegalArgumentException() {
+        erroSql = new SQLException("Duplicate entry", "23000", 1062);
 
         assertThrows(IllegalArgumentException.class, () -> dao.incluir(new Carteira(1, "Alice", "Binance")));
     }
 
     @Test
-    void incluir_erroGenericoSql_lancaRuntimeException() throws SQLException {
-        when(statementMock.executeUpdate()).thenThrow(new SQLException("Connection lost", "08003", 2006));
+    void incluir_erroGenericoSql_lancaRuntimeException() {
+        erroSql = new SQLException("Connection lost", "08003", 2006);
 
         assertThrows(RuntimeException.class, () -> dao.incluir(new Carteira(1, "Alice", "Binance")));
     }
 
     @Test
-    void consultar_idExistente_retornaOptionalPreenchido() throws SQLException {
-        when(statementMock.executeQuery()).thenReturn(resultSetMock);
-        when(resultSetMock.next()).thenReturn(true);
-        when(resultSetMock.getInt("IdCarteira")).thenReturn(10);
-        when(resultSetMock.getString("Titular")).thenReturn("Bob");
-        when(resultSetMock.getString("Corretora")).thenReturn("Kraken");
+    void consultar_idExistente_retornaOptionalPreenchido() {
+        linhasRs.add(new Object[]{10, "Bob", "Kraken"});
 
         Optional<Carteira> resultado = dao.consultar(10);
 
@@ -97,10 +203,7 @@ class CarteiraDAOMariaDBTest {
     }
 
     @Test
-    void consultar_idInexistente_retornaOptionalVazio() throws SQLException {
-        when(statementMock.executeQuery()).thenReturn(resultSetMock);
-        when(resultSetMock.next()).thenReturn(false);
-
+    void consultar_idInexistente_retornaOptionalVazio() {
         Optional<Carteira> resultado = dao.consultar(999);
 
         assertTrue(resultado.isEmpty());
@@ -112,12 +215,9 @@ class CarteiraDAOMariaDBTest {
     }
 
     @Test
-    void consultarTodos_retornaListaMapeada() throws SQLException {
-        when(statementMock.executeQuery()).thenReturn(resultSetMock);
-        when(resultSetMock.next()).thenReturn(true, true, false);
-        when(resultSetMock.getInt("IdCarteira")).thenReturn(1, 2);
-        when(resultSetMock.getString("Titular")).thenReturn("Alice", "Bob");
-        when(resultSetMock.getString("Corretora")).thenReturn("Binance", "Coinbase");
+    void consultarTodos_retornaListaMapeada() {
+        linhasRs.add(new Object[]{1, "Alice", "Binance"});
+        linhasRs.add(new Object[]{2, "Bob", "Coinbase"});
 
         List<Carteira> lista = dao.consultarTodos();
 
@@ -127,12 +227,8 @@ class CarteiraDAOMariaDBTest {
     }
 
     @Test
-    void consultarTodasOrdenadasPorTitular_retornaListaMapeada() throws SQLException {
-        when(statementMock.executeQuery()).thenReturn(resultSetMock);
-        when(resultSetMock.next()).thenReturn(true, false);
-        when(resultSetMock.getInt("IdCarteira")).thenReturn(2);
-        when(resultSetMock.getString("Titular")).thenReturn("Ana");
-        when(resultSetMock.getString("Corretora")).thenReturn("Mercado Bitcoin");
+    void consultarTodasOrdenadasPorTitular_retornaListaMapeada() {
+        linhasRs.add(new Object[]{2, "Ana", "Mercado Bitcoin"});
 
         List<Carteira> lista = dao.consultarTodasOrdenadasPorTitular();
 
@@ -141,19 +237,19 @@ class CarteiraDAOMariaDBTest {
     }
 
     @Test
-    void editar_carteiraExistente_atualizaComSucesso() throws SQLException {
-        when(statementMock.executeUpdate()).thenReturn(1);
+    void editar_carteiraExistente_atualizaComSucesso() {
+        updateReturn = 1;
 
         dao.editar(new Carteira(1, "Alice Nova", "OKX"));
 
-        verify(statementMock).setString(1, "Alice Nova");
-        verify(statementMock).setString(2, "OKX");
-        verify(statementMock).setInt(3, 1);
+        assertEquals("Alice Nova", params.get(1));
+        assertEquals("OKX", params.get(2));
+        assertEquals(1, params.get(3));
     }
 
     @Test
-    void editar_carteiraInexistente_lancaNoSuchElementException() throws SQLException {
-        when(statementMock.executeUpdate()).thenReturn(0);
+    void editar_carteiraInexistente_lancaNoSuchElementException() {
+        updateReturn = 0;
 
         assertThrows(NoSuchElementException.class, () -> dao.editar(new Carteira(99, "Ninguem", "X")));
     }
@@ -164,25 +260,24 @@ class CarteiraDAOMariaDBTest {
     }
 
     @Test
-    void excluir_carteiraSemMovimentacoes_removeComSucesso() throws SQLException {
-        when(statementMock.executeUpdate()).thenReturn(1);
+    void excluir_carteiraSemMovimentacoes_removeComSucesso() {
+        updateReturn = 1;
 
         dao.excluir(1);
 
-        verify(statementMock).setInt(1, 1);
-        verify(statementMock).executeUpdate();
+        assertEquals(1, params.get(1));
     }
 
     @Test
-    void excluir_carteiraInexistente_lancaNoSuchElementException() throws SQLException {
-        when(statementMock.executeUpdate()).thenReturn(0);
+    void excluir_carteiraInexistente_lancaNoSuchElementException() {
+        updateReturn = 0;
 
         assertThrows(NoSuchElementException.class, () -> dao.excluir(99));
     }
 
     @Test
-    void excluir_carteiraComMovimentacoesSql1451_lancaIllegalStateException() throws SQLException {
-        when(statementMock.executeUpdate()).thenThrow(new SQLException("FK constraint fails", "23000", 1451));
+    void excluir_carteiraComMovimentacoesSql1451_lancaIllegalStateException() {
+        erroSql = new SQLException("FK constraint fails", "23000", 1451);
 
         assertThrows(IllegalStateException.class, () -> dao.excluir(1));
     }
