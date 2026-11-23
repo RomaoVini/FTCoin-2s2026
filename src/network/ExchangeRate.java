@@ -21,7 +21,7 @@
  * ************************************************************************************************************************
  */
 
-package br.ftcoin.dto;
+package network;
 
 import java.io.Serializable;
 import java.math.BigDecimal;

@@ -16,7 +16,7 @@
  * ************************************************************************************************************************
  */
 
-package br.ftcoin.network;
+package network;
 
 import java.io.Serializable;
 import java.time.LocalDate;

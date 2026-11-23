@@ -15,11 +15,11 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import br.ftcoin.dto.ExchangeRate;
 import br.ftcoin.model.Cotacao;
-import br.ftcoin.network.NetworkRequest;
-import br.ftcoin.network.NetworkResponse;
 import br.ftcoin.util.I18n;
+import network.ExchangeRate;
+import network.NetworkRequest;
+import network.NetworkResponse;
 
 /**
  * Integração com o servidor proprietário de cotações FTCoin.

@@ -20,13 +20,14 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import br.ftcoin.dto.ExchangeRate;
 import br.ftcoin.enums.Idioma;
 import br.ftcoin.model.Cotacao;
-import br.ftcoin.network.NetworkResponse;
 import br.ftcoin.service.OraculoException;
 import br.ftcoin.service.OraculoService;
 import br.ftcoin.util.I18n;
+import network.ExchangeRate;
+import network.NetworkRequest;
+import network.NetworkResponse;
 
 class OraculoServiceTest {
    @BeforeEach
@@ -119,7 +120,7 @@ class OraculoServiceTest {
             try (Socket socket = servidor.accept();
                   ObjectOutputStream saida = new ObjectOutputStream(socket.getOutputStream());
                   ObjectInputStream entrada = new ObjectInputStream(socket.getInputStream())) {
-               entrada.readObject();
+               assertTrue(entrada.readObject() instanceof NetworkRequest);
                saida.writeObject(resposta);
                saida.flush();
             } catch (Exception exception) {

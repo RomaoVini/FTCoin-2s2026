@@ -15,12 +15,10 @@
  *
  * ************************************************************************************************************************
  */
-package br.ftcoin.network;
+package network;
 
 import java.io.Serializable;
 import java.util.List;
-
-import br.ftcoin.dto.ExchangeRate;
 
 /**
  * Resposta serializável do servidor, contendo cotações ou uma mensagem de erro.
