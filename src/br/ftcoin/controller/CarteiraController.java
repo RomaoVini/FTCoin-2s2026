@@ -15,7 +15,8 @@ import java.util.logging.Logger;
 /**
  * Controlador responsável por gerenciar as operações de negócio e fluxo
  * relacionadas à entidade {@link Carteira} (cadastro, consulta, edição e exclusão).
- * Traduz violações de regra de negócio em {@link ValidacaoException} internacionalizadas.
+ * Valida os dados das operações e lança {@link ValidacaoException} com mensagens
+ * internacionalizadas quando uma regra de negócio não é atendida.
  *
  * @author Equipe FT_Coin
  * @version 2.0
@@ -27,13 +28,13 @@ public class CarteiraController {
     /** Repositório de acesso a dados das carteiras. */
     private final CarteiraDAO dao;
 
-    /** View do submenu de carteiras; permanece {@code null} quando o controlador é usado sem CLI (ex.: testes). */
+    /** View do submenu de carteiras; pode ser nula quando o controlador é usado sem a CLI. */
     private CarteiraView view;
 
     /**
-     * Constrói o controlador extraindo o DAO diretamente de uma fábrica abstrata.
+     * Constrói o controlador obtendo o DAO de uma fábrica.
      *
-     * @param factory Fábrica concreta de DAOs (Memória ou MariaDB).
+     * @param factory fábrica concreta de DAOs (memória ou MariaDB)
      * @throws NullPointerException se {@code factory} for nulo.
      */
     public CarteiraController(DAOFactory factory) {
@@ -42,10 +43,10 @@ public class CarteiraController {
 
     /**
      * Constrói o controlador injetando diretamente uma implementação de {@link CarteiraDAO}.
-     * Útil para injeção em testes unitários sem dependência de interface gráfica/CLI.
+     * Pode ser usado independentemente da interface CLI.
      *
-     * @param dao Implementação de acesso a dados de Carteira.
-     * @throws NullPointerException se {@code dao} for nulo.
+     * @param dao implementação de acesso a dados de carteiras
+     * @throws NullPointerException se {@code dao} for nulo
      */
     public CarteiraController(CarteiraDAO dao) {
         this.dao = Objects.requireNonNull(dao, "CarteiraDAO não pode ser nulo.");
@@ -55,9 +56,9 @@ public class CarteiraController {
      * Constrói o controlador completo para execução na interface de linha de comando (CLI),
      * utilizado pelo {@link AppController}.
      *
-     * @param menuView View genérica de menus da aplicação.
-     * @param dao      Implementação de acesso a dados de Carteira.
-     * @throws NullPointerException se {@code menuView} ou {@code dao} forem nulos.
+     * @param menuView view genérica de menus da aplicação
+     * @param dao implementação de acesso a dados de carteiras
+     * @throws NullPointerException se {@code menuView} ou {@code dao} forem nulos
      */
     public CarteiraController(MenuView menuView, CarteiraDAO dao) {
         this(dao);
@@ -66,9 +67,10 @@ public class CarteiraController {
     }
 
     /**
-     * Inicia a exibição e o loop de interação do submenu de Carteiras na CLI.
+     * Solicita à view que exiba o submenu de carteiras e processe as opções da CLI.
      *
-     * @throws IllegalStateException se o controlador tiver sido instanciado sem uma {@link CarteiraView}.
+     * @throws IllegalStateException se o controlador tiver sido criado sem uma
+     *                               {@link CarteiraView}
      */
     public void exibirMenuCarteira() {
         if (this.view == null) {
@@ -80,11 +82,11 @@ public class CarteiraController {
     /**
      * Valida os dados e cadastra uma nova carteira no repositório ativo.
      *
-     * @param id        Identificador numérico único da carteira (deve ser maior que zero).
-     * @param titular   Nome do proprietário da carteira.
-     * @param corretora Nome da corretora custodiante.
-     * @return A entidade {@link Carteira} recém-cadastrada.
-     * @throws ValidacaoException se algum campo for inválido ou se o ID já estiver em uso.
+     * @param id identificador numérico único da carteira (deve ser maior que zero)
+     * @param titular nome do proprietário da carteira
+     * @param corretora nome da corretora custodiante
+     * @return entidade {@link Carteira} recém-cadastrada
+     * @throws ValidacaoException se algum campo for inválido ou o ID já estiver em uso
      */
     public Carteira cadastrar(int id, String titular, String corretora) {
         validarId(id);
@@ -104,11 +106,11 @@ public class CarteiraController {
     /**
      * Atualiza os dados cadastrais (titular e corretora) de uma carteira existente.
      *
-     * @param id        Identificador da carteira a ser alterada.
-     * @param titular   Novo nome do titular.
-     * @param corretora Novo nome da corretora.
-     * @return A entidade {@link Carteira} atualizada.
-     * @throws ValidacaoException se os dados forem inválidos ou a carteira não for encontrada.
+     * @param id identificador da carteira a ser alterada
+     * @param titular novo nome do titular
+     * @param corretora novo nome da corretora
+     * @return entidade {@link Carteira} atualizada
+     * @throws ValidacaoException se os dados forem inválidos ou a carteira não existir
      */
     public Carteira atualizar(int id, String titular, String corretora) {
         validarId(id);
@@ -126,8 +128,8 @@ public class CarteiraController {
      * Remove uma carteira do repositório, bloqueando a exclusão caso existam
      * movimentações financeiras vinculadas a ela.
      *
-     * @param id Identificador da carteira a ser excluída.
-     * @throws ValidacaoException se o ID for inválido, não existir ou possuir histórico vinculado.
+     * @param id identificador da carteira a ser excluída
+     * @throws ValidacaoException se o ID for inválido, não existir ou possuir movimentações vinculadas
      */
     public void excluir(int id) {
         validarId(id);
@@ -145,9 +147,9 @@ public class CarteiraController {
     /**
      * Busca uma carteira específica pelo seu identificador.
      *
-     * @param id Identificador da carteira.
-     * @return A entidade {@link Carteira} encontrada.
-     * @throws ValidacaoException se o ID for inválido ou não estiver cadastrado.
+     * @param id identificador da carteira
+     * @return entidade {@link Carteira} encontrada
+     * @throws ValidacaoException se o ID for inválido ou não estiver cadastrado
      */
     public Carteira buscarPorId(int id) {
         validarId(id);
@@ -157,7 +159,7 @@ public class CarteiraController {
     /**
      * Retorna todas as carteiras cadastradas no repositório.
      *
-     * @return Lista contendo todas as carteiras.
+     * @return lista contendo todas as carteiras cadastradas
      */
     public List<Carteira> listarTodas() {
         return dao.consultarTodos();
@@ -166,9 +168,9 @@ public class CarteiraController {
     /**
      * Consulta uma carteira no DAO e falha caso ela não exista.
      *
-     * @param id Identificador da carteira.
-     * @return A carteira encontrada.
-     * @throws ValidacaoException se não houver carteira com o identificador informado.
+     * @param id identificador da carteira
+     * @return carteira encontrada
+     * @throws ValidacaoException se não houver carteira com o identificador informado
      */
     private Carteira buscarOuFalhar(int id) {
         return dao.consultar(id).orElseThrow(() ->
@@ -178,8 +180,8 @@ public class CarteiraController {
     /**
      * Garante que o identificador da carteira seja estritamente positivo.
      *
-     * @param id Identificador a ser validado.
-     * @throws ValidacaoException se {@code id} for menor ou igual a zero.
+     * @param id identificador a ser validado
+     * @throws ValidacaoException se {@code id} for menor ou igual a zero
      */
     private static void validarId(int id) {
         if (id <= 0) {
@@ -190,9 +192,9 @@ public class CarteiraController {
     /**
      * Garante que um campo textual obrigatório não seja nulo nem esteja em branco.
      *
-     * @param valor     Texto a ser validado.
-     * @param chaveErro Chave de internacionalização da mensagem de erro a ser lançada.
-     * @throws ValidacaoException se {@code valor} for nulo ou em branco.
+     * @param valor texto a ser validado
+     * @param chaveErro chave de internacionalização da mensagem de erro
+     * @throws ValidacaoException se {@code valor} for nulo ou em branco
      */
     private static void validarTexto(String valor, String chaveErro) {
         if (valor == null || valor.isBlank()) {

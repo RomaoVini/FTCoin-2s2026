@@ -26,15 +26,23 @@ import java.time.LocalDate;
  */
 public final class NetworkRequest implements Serializable
    {
+   /** Versão de serialização desta classe; deve ser compatível com a do servidor. */
    private static final long serialVersionUID = 1L;
 
+   /** Nome do grupo cliente autenticado pelo servidor. */
    private final String      groupName;
+
+   /** Credencial do grupo cliente. */
    private final String      groupPassword;
+
+   /** Data inicial do intervalo solicitado, inclusiva. */
    private final LocalDate   firstDate;
+
+   /** Data final do intervalo solicitado, inclusiva. */
    private final LocalDate   lastDate;
 
    /**
-    * Cria uma requisição de cotações para o grupo e o intervalo informados.
+    * Cria uma requisição de cotações para o grupo e o intervalo inclusivo informados.
     *
     * @param groupName nome do grupo cliente
     * @param groupPassword credencial do grupo cliente

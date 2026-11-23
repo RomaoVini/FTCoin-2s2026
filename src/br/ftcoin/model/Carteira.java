@@ -14,8 +14,13 @@ import java.util.Objects;
  */
 public class Carteira {
 
+    /** Identificador numérico imutável da carteira. */
     private final int id;
+
+    /** Nome do titular da carteira. */
     private String titular;
+
+    /** Nome da corretora vinculada à carteira. */
     private String corretora;
 
     /**
@@ -24,7 +29,8 @@ public class Carteira {
      * @param id        Identificador numérico único da carteira (deve ser maior que zero).
      * @param titular   Nome completo do proprietário da carteira.
      * @param corretora Nome da corretora custodiante.
-     * @throws ValidacaoException se o {@code id} for menor ou igual a zero, ou se {@code titular}/{@code corretora} forem nulos ou vazios.
+     * @throws ValidacaoException se o {@code id} for menor ou igual a zero, ou se
+     *                            {@code titular}/{@code corretora} forem nulos ou estiverem em branco.
      */
     public Carteira(int id, String titular, String corretora) {
         if (id <= 0) {
