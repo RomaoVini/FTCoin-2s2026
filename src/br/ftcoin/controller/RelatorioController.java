@@ -33,11 +33,11 @@ import java.util.Objects;
  * <p>Orquestra as camadas do padrão MVC: busca os dados nos DAOs, aciona o
  * Model ({@link CarteiraFinanceira} e {@link CalculoFinanceiroService}) para
  * os cálculos e entrega à {@link RelatorioView} dados já formatados em
- * {@link RelatorioCarteiraDTO}. Este controlador não realiza cálculos de
- * negócio: apenas ordena, orquestra e formata.</p>
+ * {@link RelatorioCarteiraDTO}. Os cálculos financeiros são delegados às
+ * classes do Model; este controlador coordena as consultas e a apresentação.</p>
  *
  * @author Equipe FT_Coin
- * @version 1.0
+ * @version 2.0
  * @see RelatorioView
  * @see RelatorioCarteiraDTO
  */
@@ -142,12 +142,12 @@ public final class RelatorioController {
     /**
      * Gera o relatório de saldo atual de uma carteira: quantidade de FTCoins,
      * valor a custo médio, custo médio unitário e valoração a mercado.
-     * Uma carteira sem movimentações tem saldo zero e não consulta o Oráculo.
+     * Uma carteira sem movimentações tem saldo zero e não consulta o oráculo.
      *
      * @param idCarteira identificador da carteira
-     * @return saldo atual já formatado
+     * @return saldo atual da carteira já formatado
      * @throws ValidacaoException se a carteira não existir
-     * @throws OraculoException   se o Oráculo falhar ao fornecer as cotações
+     * @throws OraculoException se o oráculo falhar ao fornecer uma cotação necessária
      */
     public RelatorioCarteiraDTO gerarSaldoAtual(int idCarteira) {
         Carteira carteira = buscarCarteira(idCarteira);
@@ -185,7 +185,7 @@ public final class RelatorioController {
      * @param idCarteira identificador da carteira
      * @return histórico formatado; a lista de movimentos é vazia se não houver operações
      * @throws ValidacaoException se a carteira não existir
-     * @throws OraculoException   se o Oráculo falhar ao fornecer uma cotação
+     * @throws OraculoException se o oráculo falhar ao fornecer uma cotação histórica
      */
     public RelatorioCarteiraDTO.Historico gerarHistorico(int idCarteira) {
         Carteira carteira = buscarCarteira(idCarteira);
@@ -217,7 +217,8 @@ public final class RelatorioController {
      *
      * @return um relatório por carteira
      * @throws ValidacaoException se não houver carteiras cadastradas
-     * @throws OraculoException   se o Oráculo falhar e não houver cotação anterior em cache
+     * @throws OraculoException se não houver cotação atual nem cotação anterior conhecida
+     *                          em cache, ou se falhar a consulta de uma cotação histórica
      */
     public List<RelatorioCarteiraDTO.GanhoPerda> gerarGanhoPerdaTodas() {
         List<Carteira> carteiras = listarCarteirasPorId();
@@ -245,6 +246,14 @@ public final class RelatorioController {
         return relatorio;
     }
 
+    /**
+     * Apura os resultados das movimentações e o valor de mercado de uma carteira.
+     *
+     * @param carteira carteira a apurar
+     * @param atual cotação usada para valorar o saldo atual
+     * @param desatualizada indica se a cotação atual é uma cotação anterior em cache
+     * @return relatório de ganho ou perda da carteira
+     */
     private RelatorioCarteiraDTO.GanhoPerda apurar(Carteira carteira, Cotacao atual, boolean desatualizada) {
         CarteiraFinanceira financeiro = new CarteiraFinanceira();
         List<RelatorioCarteiraDTO.OperacaoApurada> operacoes = new ArrayList<>();
@@ -279,11 +288,24 @@ public final class RelatorioController {
 
     // ---------- Utilitários ----------
 
+    /**
+     * Busca uma carteira e falha se ela não estiver cadastrada.
+     *
+     * @param idCarteira identificador da carteira
+     * @return carteira encontrada
+     * @throws ValidacaoException se a carteira não existir
+     */
     private Carteira buscarCarteira(int idCarteira) {
         return carteiraDAO.consultar(idCarteira)
                 .orElseThrow(() -> new ValidacaoException("wallet.error.notFound", idCarteira));
     }
 
+    /**
+     * Recupera as movimentações de uma carteira em ordem cronológica e por ID crescente.
+     *
+     * @param idCarteira identificador da carteira
+     * @return nova lista ordenada de movimentações
+     */
     private List<Movimentacao> movimentacoesEmOrdem(int idCarteira) {
         List<Movimentacao> movimentacoes = new ArrayList<>(movimentacaoDAO.consultarPorCarteira(idCarteira));
         movimentacoes.sort(Comparator.comparing(Movimentacao::getDataOperacao)
@@ -291,26 +313,60 @@ public final class RelatorioController {
         return movimentacoes;
     }
 
+    /**
+     * Retorna a chave de tradução correspondente ao tipo da operação.
+     *
+     * @param movimentacao movimentação a consultar
+     * @return chave de tradução de compra ou venda
+     */
     private static String chaveDoTipo(Movimentacao movimentacao) {
         return movimentacao.isCompra() ? "report.wallet.history.type.buy" : "report.wallet.history.type.sell";
     }
 
+    /**
+     * Converte uma quantidade para texto sem zeros finais desnecessários.
+     *
+     * @param valor quantidade numérica
+     * @return representação decimal sem zeros finais desnecessários
+     */
     private static String quantidade(BigDecimal valor) {
         return valor.stripTrailingZeros().toPlainString();
     }
 
+    /**
+     * Retorna a localidade do idioma atualmente selecionado.
+     *
+     * @return localidade ativa
+     */
     private static Locale localeAtivo() {
         return I18n.getIdiomaAtual().getLocale();
     }
 
+    /**
+     * Formata um valor como moeda conforme a localidade ativa.
+     *
+     * @param valor valor monetário
+     * @return valor formatado como moeda
+     */
     private static String moeda(BigDecimal valor) {
         return NumberFormat.getCurrencyInstance(localeAtivo()).format(valor);
     }
 
+    /**
+     * Formata uma data no estilo médio da localidade ativa.
+     *
+     * @param valor data a formatar
+     * @return data formatada
+     */
     private static String data(LocalDate valor) {
         return valor.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(localeAtivo()));
     }
 
+    /**
+     * Cria um comparador textual em português que ignora acentos e diferenças de caixa.
+     *
+     * @return comparador configurado para nomes de titulares
+     */
     private static Collator criarCollator() {
         Collator c = Collator.getInstance(PT_BR);
         c.setStrength(Collator.PRIMARY);

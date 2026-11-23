@@ -30,6 +30,9 @@ import br.ftcoin.service.OraculoService;
 
 /**
  * Cliente de linha de comando que demonstra a consulta de um histórico de cotações.
+ *
+ * @author Equipe FT_Coin
+ * @version 2.0
  */
 public final class OracleSimpleClient
    {
@@ -41,6 +44,8 @@ public final class OracleSimpleClient
     *
     * @param host endereço do servidor de cotações
     * @param port porta do servidor de cotações
+    * @throws IllegalArgumentException se o endereço estiver vazio ou a porta estiver fora do
+    *                                  intervalo válido
     */
    public OracleSimpleClient(String host, int port)
       {
@@ -48,9 +53,11 @@ public final class OracleSimpleClient
       }
 
    /**
-    * Executa o cliente para consultar e exibir as cotações dos últimos sete dias.
+    * Executa o cliente para consultar e exibir as cotações desde a data atual menos sete dias
+    * até a data atual, incluindo ambas as datas.
     *
-    * @param args argumentos opcionais: endereço e porta do servidor
+    * @param args argumentos opcionais; devem conter o endereço do servidor e a porta, nessa
+    *             ordem. Quando não forem informados dois argumentos, utiliza os valores padrão
     */
    public static void main(String[] args)
       {
@@ -91,7 +98,8 @@ public final class OracleSimpleClient
     *
     * @param since data inicial do intervalo (inclusiva)
     * @param to    data final do intervalo (inclusiva)
-    * @return lista de cotações do período (pode ser vazia)
+    * @return lista de cotações recebidas para o período; pode ser vazia
+    * @throws br.ftcoin.service.OraculoException se o intervalo for inválido ou a consulta falhar
     */
    private List<Cotacao> getValues(LocalDate since, LocalDate to)
       {
@@ -101,8 +109,9 @@ public final class OracleSimpleClient
    /**
     * Consulta as cotações do intervalo informado e as exibe no console.
     *
-    * @param firstDate data inicial da consulta
-    * @param lastDate  data final da consulta
+    * @param firstDate data inicial da consulta (inclusiva)
+    * @param lastDate  data final da consulta (inclusiva)
+    * @throws br.ftcoin.service.OraculoException se o intervalo for inválido ou a consulta falhar
     */
    private void go(LocalDate firstDate, LocalDate lastDate)
       {

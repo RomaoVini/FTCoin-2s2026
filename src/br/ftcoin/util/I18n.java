@@ -20,8 +20,13 @@ import java.util.ResourceBundle;
  */
 public final class I18n {
 
+    /** Nome base dos arquivos de recursos de mensagens. */
     private static final String BUNDLE_NAME = "messages";
+
+    /** Pacote de recursos carregado para o idioma ativo. */
     private static ResourceBundle bundle;
+
+    /** Idioma atualmente selecionado pela aplicação. */
     private static Idioma idiomaAtual;
 
     static {
@@ -63,7 +68,8 @@ public final class I18n {
      * Obtém a mensagem traduzida associada à chave informada no idioma ativo.
      *
      * @param chave Chave mapeada no arquivo {@code .properties}.
-     * @return O texto traduzido ou {@code "!chave!"} como fallback caso a chave não exista.
+     * @return Texto vazio se a chave for nula ou em branco, texto traduzido ou
+     *         {@code "!chave!"} como fallback caso a chave não exista.
      */
     public static String get(String chave) {
         if (chave == null || chave.isBlank()) {

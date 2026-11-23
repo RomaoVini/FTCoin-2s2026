@@ -14,6 +14,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import br.ftcoin.model.Cotacao;
 import br.ftcoin.util.I18n;
@@ -32,6 +34,8 @@ import network.NetworkResponse;
  * @version 2.0
  */
 public final class OraculoService implements OraculoCotacao {
+
+   private static final Logger LOG = Logger.getLogger(OraculoService.class.getName());
 
    /** Nome do grupo cliente usado na autenticação junto ao servidor. */
    private static final String GROUP_NAME = "POO2_2s26_A02";
@@ -100,6 +104,16 @@ public final class OraculoService implements OraculoCotacao {
       this(host, port, groupName, groupPassword, false);
    }
 
+   /**
+    * Valida e armazena as configurações do servidor e do grupo cliente.
+    *
+    * @param host endereço do servidor
+    * @param port porta do servidor
+    * @param groupName nome do grupo cliente
+    * @param groupPassword credencial do grupo, possivelmente ausente quando a configuração padrão é usada
+    * @param allowMissingConfiguredPassword indica se a senha configurada pode estar ausente
+    * @throws IllegalArgumentException se o endereço, a porta ou as credenciais obrigatórias forem inválidos
+    */
    private OraculoService(String host, int port, String groupName, String groupPassword,
          boolean allowMissingConfiguredPassword) {
       if (host == null || host.isBlank()) {
@@ -215,6 +229,7 @@ public final class OraculoService implements OraculoCotacao {
             response = networkResponse;
          }
       } catch (IOException | ClassNotFoundException exception) {
+         LOG.log(Level.SEVERE, "Falha de comunicação com o oráculo", exception);
          throw new OraculoException(I18n.get("oracle.error.communication"), exception);
       }
 

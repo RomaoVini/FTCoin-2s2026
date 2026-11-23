@@ -25,6 +25,7 @@ import java.util.List;
  */
 public final class NetworkResponse implements Serializable
    {
+   /** Versão de serialização desta classe; deve ser compatível com a do servidor. */
    private static final long serialVersionUID = 1L;
 
    /** Cotações retornadas pelo servidor, se a consulta for bem-sucedida. */

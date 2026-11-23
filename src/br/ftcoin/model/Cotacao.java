@@ -7,7 +7,10 @@ import java.math.BigDecimal;
  * Cotação imutável da moeda virtual em uma data específica.
  */
 public final class Cotacao {
+   /** Data a que a cotação se refere. */
    private final LocalDate data;
+
+   /** Preço positivo da moeda na data de referência. */
    private final BigDecimal valor;
 
    /**

@@ -9,7 +9,7 @@ import java.util.Objects;
 
 /**
  * Interface de linha de comando (CLI) responsável pelas telas de interação
- * do módulo de Carteiras (cadastro, listagem, edição e exclusão).
+ * do módulo de Carteiras (cadastro, listagem, consulta, edição e exclusão).
  *
  * <p>Atua estritamente na camada de apresentação, delegando todas as validações
  * e regras de negócio ao {@link CarteiraController}.</p>
@@ -21,7 +21,7 @@ import java.util.Objects;
  */
 public class CarteiraView {
 
-    /** Chaves {@link I18n} das opções numeradas exibidas no submenu de Carteiras (de 1 a 4). */
+    /** Chaves {@link I18n} das opções numeradas exibidas no submenu de Carteiras (de 1 a 5). */
     private static final List<String> OPCOES = List.of(
             "walletView.option.register",
             "walletView.option.list",

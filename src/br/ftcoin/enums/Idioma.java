@@ -11,13 +11,20 @@ import java.util.Locale;
  */
 public enum Idioma {
 
+    /** Idioma português do Brasil. */
     PORTUGUES("pt", "BR", "Português (Brasil)"),
+    /** Idioma inglês dos Estados Unidos. */
     INGLES("en", "US", "English (US)"),
+    /** Idioma espanhol da Espanha. */
     ESPANHOL("es", "ES", "Español (España)");
 
+    /** Código ISO 639-1 do idioma. */
     private final String codigo;
+    /** Código ISO 3166-1 alpha-2 do país associado ao idioma. */
     private final String pais;
+    /** Nome legível do idioma e da região. */
     private final String descricao;
+    /** Localidade usada pela aplicação para traduções e formatação. */
     private final Locale locale;
 
     /**
@@ -73,7 +80,8 @@ public enum Idioma {
 
     /**
      * Resolve o {@link Idioma} correspondente a um {@link Locale} (como {@link Locale#getDefault()}).
-     * Caso o idioma do sistema não seja suportado, retorna {@link #PORTUGUES} como padrão.
+     * Caso a localidade seja nula ou o idioma não seja suportado, retorna
+     * {@link #PORTUGUES} como padrão.
      *
      * @param locale Localidade de referência.
      * @return Instância de {@link Idioma} compatível.

@@ -8,10 +8,12 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * Gerencia a conexão única com o banco de dados relacional MariaDB
- * utilizando o padrão de projeto <b>Singleton</b> (com sincronização <i>thread-safe</i>).
+ * utilizando o padrão de projeto <b>Singleton</b>. O acesso sincronizado à instância
+ * única protege sua criação e recuperação concorrentes.
  *
  * <p>As credenciais ({@code MARIADB_USER} e {@code MARIADB_PASSWORD}) são buscadas
  * primeiramente nas variáveis de ambiente do sistema operacional e, como alternativa,
@@ -21,6 +23,8 @@ import java.util.Map;
  * @version 2.0
  */
 public final class DatabaseConnection {
+
+    private static final Logger LOG = Logger.getLogger(DatabaseConnection.class.getName());
 
     /** URL JDBC padrão do banco, usada quando {@code MARIADB_URL} não está configurada. */
     private static final String DEFAULT_URL =
@@ -56,6 +60,7 @@ public final class DatabaseConnection {
         }
 
         this.conexao = DriverManager.getConnection(URL, USUARIO, SENHA);
+        LOG.info("Conexão MariaDB estabelecida");
     }
 
     /**
@@ -73,9 +78,9 @@ public final class DatabaseConnection {
     }
 
     /**
-     * Retorna o objeto {@link Connection} JDBC ativo para execução de instruções SQL.
+     * Retorna o objeto {@link Connection} JDBC gerenciado por esta instância.
      *
-     * @return Conexão JDBC ativa.
+     * @return Conexão JDBC, que pode estar fechada caso {@link #fechar()} já tenha sido chamado.
      */
     public Connection getConexao() {
         return conexao;
@@ -89,6 +94,7 @@ public final class DatabaseConnection {
     public synchronized void fechar() throws SQLException {
         if (conexao != null && !conexao.isClosed()) {
             conexao.close();
+            LOG.info("Conexão MariaDB fechada");
         }
     }
 

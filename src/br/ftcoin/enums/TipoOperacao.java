@@ -18,6 +18,7 @@ public enum TipoOperacao {
     /** Operação de alienação/venda de moedas virtuais (código {@code 'V'}). */
     VENDA('V');
 
+    /** Caractere identificador da operação usado na persistência. */
     private final char codigo;
 
     /**

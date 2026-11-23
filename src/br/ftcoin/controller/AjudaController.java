@@ -8,7 +8,7 @@ import java.util.Objects;
 
 /**
  * Controlador responsável por gerenciar a exibição das instruções de uso
- * e os créditos da equipe de desenvolvimento do sistema FT_Coin.
+ * e dos créditos da equipe de desenvolvimento do sistema FT_Coin.
  *
  * @author Equipe FT_Coin
  * @version 2.0
@@ -19,10 +19,10 @@ public class AjudaController {
     private final AjudaView view;
 
     /**
-     * Constrói o controlador de ajuda injetando o utilitário de console
-     * e instanciando sua respectiva camada de visualização ({@link AjudaView}).
+     * Constrói o controlador de ajuda com o utilitário de console fornecido
+     * e cria sua camada de visualização ({@link AjudaView}).
      *
-     * @param consoleUtils Instância centralizada para interação e formatação na CLI.
+     * @param consoleUtils instância centralizada para interação e formatação na CLI
      * @throws NullPointerException se {@code consoleUtils} for nulo.
      */
     public AjudaController(ConsoleUtils consoleUtils) {
@@ -31,8 +31,8 @@ public class AjudaController {
     }
 
     /**
-     * Aciona a camada de visualização para exibir as instruções de uso
-     * e os créditos do sistema no idioma ativo.
+     * Solicita à camada de visualização que exiba as instruções de uso
+     * e os créditos do sistema no idioma atualmente configurado.
      */
     public void exibirMenuAjuda() {
         view.exibirAjudaECreditos();

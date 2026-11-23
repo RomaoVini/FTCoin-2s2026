@@ -8,6 +8,7 @@ import br.ftcoin.enums.MenuOperacao;
 import br.ftcoin.service.OraculoCotacao;
 import br.ftcoin.service.OraculoService;
 import br.ftcoin.util.DatabaseConnection;
+import br.ftcoin.util.ConsoleEncoding;
 import br.ftcoin.util.I18n;
 import br.ftcoin.view.ConsoleUtils;
 import br.ftcoin.view.MenuView;
@@ -15,16 +16,20 @@ import br.ftcoin.view.MenuView;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Controlador principal (Orquestrador) do sistema FT_Coin.
- * Gerencia o ciclo de vida da aplicação, o loop do Menu Principal,
- * a injeção de dependências nos sub-controllers e o encerramento seguro de recursos.
+ * Gerencia o ciclo de vida da aplicação, o loop do menu principal,
+ * a inicialização dos sub-controladores e o encerramento dos recursos.
  *
  * @author Equipe FT_Coin
  * @version 2.0
  */
 public class AppController {
+
+    private static final Logger LOG = Logger.getLogger(AppController.class.getName());
 
     /** View responsável por exibir menus e capturar a opção escolhida. */
     private final MenuView menuView;
@@ -51,15 +56,17 @@ public class AppController {
     private boolean executando;
 
     /**
-     * Inicializa a aplicação configurando a interface CLI, a fábrica de DAOs
-     * conforme o modo de persistência e injetando as dependências nos sub-controllers.
+     * Inicializa a interface CLI, a fábrica de DAOs conforme o modo de persistência
+     * e os controladores especializados das funcionalidades do sistema.
      *
-     * @param tipoPersistencia Tipo de armazenamento ({@code "MEMORIA"} ou {@code "MARIADB"}) informado na CLI.
+     * @param tipoPersistencia modo de persistência informado na CLI;
+     *                         {@code "MARIADB"} ativa a persistência no banco e
+     *                         qualquer outro valor seleciona a persistência em memória
      */
     public AppController(String tipoPersistencia) {
         this.tipoPersistencia = (tipoPersistencia != null) ? tipoPersistencia.toUpperCase() : "MEMORIA";
 
-        Scanner scanner = new Scanner(System.in);
+        Scanner scanner = new Scanner(System.in, ConsoleEncoding.getCharset());
         this.consoleUtils = new ConsoleUtils(scanner);
         this.menuView = new MenuView(consoleUtils);
 
@@ -94,9 +101,10 @@ public class AppController {
 
     /**
      * Inicia a execução contínua da interface de linha de comando (CLI)
-     * e garante o encerramento limpo das conexões ao finalizar o loop.
+     * até o usuário escolher a opção de saída, momento em que encerra os recursos.
      */
     public void iniciar() {
+        LOG.log(Level.INFO, "Aplicação iniciada com persistência {0}", tipoPersistencia);
         while (executando) {
             exibirEProcessarMenuPrincipal();
         }
@@ -105,8 +113,10 @@ public class AppController {
     }
 
     /**
-     * Renderiza as opções do Menu Principal e direciona o fluxo
-     * para o sub-controller correspondente à escolha do usuário.
+     * Renderiza as opções do menu principal e direciona a escolha do usuário
+     * ao sub-controlador correspondente.
+     *
+     * @throws br.ftcoin.exception.ValidacaoException se a opção escolhida não existir
      */
     private void exibirEProcessarMenuPrincipal() {
         int escolha = menuView.exibirEObterOpcao(
@@ -128,7 +138,7 @@ public class AppController {
 
     /**
      * Exibe o submenu de seleção de idiomas e atualiza dinamicamente
-     * o {@link java.util.ResourceBundle} ativo do sistema.
+     * o idioma utilizado pelo {@link I18n}.
      */
     private void alterarIdioma() {
         List<String> opcoesIdioma = List.of(
@@ -156,10 +166,12 @@ public class AppController {
         if ("MARIADB".equals(this.tipoPersistencia)) {
             try {
                 DatabaseConnection.getInstancia().fechar();
-            } catch (SQLException ignored) {
-                // Caso a conexão nem tenha sido aberta durante a sessão, ignora silenciosamente
+                LOG.info("Conexão MariaDB encerrada");
+            } catch (SQLException e) {
+                LOG.log(Level.WARNING, "Não foi possível fechar a conexão MariaDB", e);
             }
         }
+        LOG.info("Aplicação encerrada");
         consoleUtils.exibirSucesso(I18n.get("mainMenu.exit"));
     }
 }

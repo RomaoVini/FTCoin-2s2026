@@ -15,6 +15,7 @@ import br.ftcoin.model.Movimentacao;
  * Cálculos financeiros que dependem da cotação de uma movimentação.
  */
 public final class CalculoFinanceiroService {
+   /** Fonte das cotações históricas e atual necessárias aos cálculos. */
    private final OraculoCotacao oraculo;
 
    /**
@@ -32,6 +33,8 @@ public final class CalculoFinanceiroService {
     *
     * @param movimentacao operação a valorar
     * @return quantidade multiplicada pela cotação da data
+    * @throws NullPointerException se a movimentação for nula
+    * @throws OraculoException se não for possível obter a cotação da data da operação
     */
    public BigDecimal calcularValorFiat(Movimentacao movimentacao) {
       Objects.requireNonNull(movimentacao, "Movimentação obrigatória");
@@ -45,6 +48,8 @@ public final class CalculoFinanceiroService {
     * @param movimentacoes histórico da carteira
     * @param dataCotacaoAtual data da cotação atual solicitada ao Oráculo
     * @return métricas de saldo, custo médio e resultados da carteira
+    * @throws NullPointerException se a lista ou a data for nula
+    * @throws OraculoException se não for possível obter uma cotação necessária ao cálculo
     */
    public CarteiraFinanceira calcularCarteira(List<Movimentacao> movimentacoes, LocalDate dataCotacaoAtual) {
       Objects.requireNonNull(movimentacoes, "Histórico de movimentações obrigatório");
