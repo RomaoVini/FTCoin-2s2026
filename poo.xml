@@ -30,6 +30,13 @@
             <artifactId>mariadb-java-client</artifactId>
             <version>3.4.1</version>
         </dependency>
+
+        <!-- Provider NOP para evitar o aviso do SLF4J quando nenhuma implementação de log é necessária -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-nop</artifactId>
+            <version>2.0.7</version>
+        </dependency>
     </dependencies>
 
     <build>
