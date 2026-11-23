@@ -22,8 +22,9 @@
 Thumbs.db
 desktop.ini
 
-# Logs
+# Logs and lock files
 *.log
+*.lck
 
 # Local service credentials
 oraculo.env
