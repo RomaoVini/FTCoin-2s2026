@@ -144,11 +144,16 @@ public final class OraculoService implements OraculoCotacao {
     */
    @Override
    public Cotacao obterCotacao(LocalDate data) {
-      if (data == null) {
-         throw new OraculoException(I18n.get("oracle.error.dateRequired"));
-      }
+      try {
+         if (data == null) {
+            throw new OraculoException(I18n.get("oracle.error.dateRequired"));
+         }
 
-      return cache.computeIfAbsent(data, this::consultarCotacaoRemota);
+         return cache.computeIfAbsent(data, this::consultarCotacaoRemota);
+      } catch (OraculoException exception) {
+         LOG.log(Level.SEVERE, "Falha ao consultar o Oráculo para a data " + data, exception);
+         throw exception;
+      }
    }
 
    /**
@@ -183,20 +188,25 @@ public final class OraculoService implements OraculoCotacao {
     * @throws OraculoException se o intervalo for inválido ou a consulta falhar
     */
    public List<Cotacao> obterCotacoes(LocalDate desde, LocalDate ate) {
-      if (desde == null || ate == null || desde.isAfter(ate)) {
-         throw new OraculoException(I18n.get("oracle.error.invalidInterval"));
-      }
-
-      List<ExchangeRate> rates = solicitarCotacoes(desde, ate);
       try {
+         if (desde == null || ate == null || desde.isAfter(ate)) {
+            throw new OraculoException(I18n.get("oracle.error.invalidInterval"));
+         }
+
+         List<ExchangeRate> rates = solicitarCotacoes(desde, ate);
          List<Cotacao> cotacoes = rates.stream()
                .filter(Objects::nonNull)
                .map(rate -> new Cotacao(rate.getDate(), rate.getValue()))
                .toList();
          cotacoes.forEach(cotacao -> cache.putIfAbsent(cotacao.getData(), cotacao));
          return cotacoes;
+      } catch (OraculoException exception) {
+         LOG.log(Level.SEVERE, "Falha ao consultar o Oráculo no intervalo " + desde + " a " + ate, exception);
+         throw exception;
       } catch (RuntimeException exception) {
-         throw new OraculoException(I18n.get("oracle.error.invalidQuotes"), exception);
+         OraculoException erro = new OraculoException(I18n.get("oracle.error.invalidQuotes"), exception);
+         LOG.log(Level.SEVERE, "Falha ao interpretar cotações do Oráculo no intervalo " + desde + " a " + ate, erro);
+         throw erro;
       }
    }
 
@@ -229,7 +239,6 @@ public final class OraculoService implements OraculoCotacao {
             response = networkResponse;
          }
       } catch (IOException | ClassNotFoundException exception) {
-         LOG.log(Level.SEVERE, "Falha de comunicação com o oráculo", exception);
          throw new OraculoException(I18n.get("oracle.error.communication"), exception);
       }
 

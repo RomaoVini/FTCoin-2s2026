@@ -98,11 +98,13 @@ public final class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
                 }
             }
         } catch (SQLException e) {
-            LOG.log(Level.SEVERE, "Falha SQL ao persistir movimentação", e);
             if (e.getErrorCode() == ERRO_FK_INEXISTENTE) {
+                LOG.log(Level.WARNING, "Cadastro de movimentação recusado: carteira inexistente={0}",
+                        m.getIdCarteira());
                 throw new IllegalArgumentException(
                         I18n.getComParametros("transaction.wallet.notFound", String.valueOf(m.getIdCarteira())), e);
             }
+            LOG.log(Level.SEVERE, "Falha SQL ao persistir movimentação: carteira=" + m.getIdCarteira(), e);
             throw new RuntimeException(I18n.getComParametros("db.error.insert", e.getMessage()), e);
         }
     }
@@ -136,9 +138,12 @@ public final class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
             }
         } catch (SQLException e) {
             if (e.getErrorCode() == ERRO_FK_INEXISTENTE) {
+                LOG.log(Level.WARNING, "Atualização de movimentação recusada: carteira inexistente={0}",
+                        m.getIdCarteira());
                 throw new IllegalArgumentException(
                         I18n.getComParametros("transaction.wallet.notFound", String.valueOf(m.getIdCarteira())), e);
             }
+            LOG.log(Level.SEVERE, "Falha SQL ao atualizar movimentação: ID=" + m.getIdMovimento(), e);
             throw new RuntimeException(I18n.getComParametros("db.error.update", e.getMessage()), e);
         }
     }
@@ -167,6 +172,7 @@ public final class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
                 }
             }
         } catch (SQLException e) {
+            LOG.log(Level.SEVERE, "Falha SQL ao excluir movimentação: ID=" + id, e);
             throw new RuntimeException(I18n.getComParametros("db.error.delete", e.getMessage()), e);
         }
     }
@@ -192,6 +198,7 @@ public final class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
                 }
             }
         } catch (SQLException e) {
+            LOG.log(Level.SEVERE, "Falha SQL ao consultar movimentação: ID=" + id, e);
             throw new RuntimeException(I18n.getComParametros("db.error.select", e.getMessage()), e);
         }
     }
@@ -215,6 +222,7 @@ public final class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
                 }
             }
         } catch (SQLException e) {
+            LOG.log(Level.SEVERE, "Falha SQL ao listar movimentações", e);
             throw new RuntimeException(I18n.getComParametros("db.error.select", e.getMessage()), e);
         }
         return lista;
@@ -241,6 +249,7 @@ public final class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
                 }
             }
         } catch (SQLException e) {
+            LOG.log(Level.SEVERE, "Falha SQL ao listar movimentações da carteira: ID=" + idCarteira, e);
             throw new RuntimeException(I18n.getComParametros("db.error.select", e.getMessage()), e);
         }
         return lista;

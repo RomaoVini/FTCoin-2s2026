@@ -26,6 +26,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Controlador dos relatórios de carteira.
@@ -42,6 +44,8 @@ import java.util.Objects;
  * @see RelatorioCarteiraDTO
  */
 public final class RelatorioController {
+
+    private static final Logger LOG = Logger.getLogger(RelatorioController.class.getName());
 
     /** Localidade usada na ordenação alfabética de nomes em português. */
     private static final Locale PT_BR = Locale.forLanguageTag("pt-BR");
@@ -155,6 +159,7 @@ public final class RelatorioController {
         List<Movimentacao> movimentacoes = movimentacaoDAO.consultarPorCarteira(idCarteira);
         if (movimentacoes.isEmpty()) {
             String zeroMoeda = moeda(BigDecimal.ZERO);
+            LOG.log(Level.INFO, "Relatório de saldo atual gerado: carteira={0}, movimentações=0", idCarteira);
             return new RelatorioCarteiraDTO(
                     carteira.getId(),
                     carteira.getTitular(),
@@ -166,6 +171,8 @@ public final class RelatorioController {
         }
 
         CarteiraFinanceira financeiro = calculo.calcularCarteira(movimentacoes, LocalDate.now());
+        LOG.log(Level.INFO, "Relatório de saldo atual gerado: carteira={0}, movimentações={1}",
+                new Object[] { idCarteira, movimentacoes.size() });
         return new RelatorioCarteiraDTO(
                 carteira.getId(),
                 carteira.getTitular(),
@@ -204,6 +211,8 @@ public final class RelatorioController {
                     moeda(financeiro.getCustoMedio()),
                     moeda(financeiro.getSaldoMercado())));
         }
+        LOG.log(Level.INFO, "Relatório de histórico gerado: carteira={0}, movimentações={1}",
+                new Object[] { idCarteira, linhas.size() });
         return new RelatorioCarteiraDTO.Historico(
                 carteira.getId(), carteira.getTitular(), carteira.getCorretora(), linhas);
     }
@@ -237,12 +246,17 @@ public final class RelatorioController {
             }
             atual = ultimaCotacaoConhecida;
             desatualizada = true;
+            LOG.log(Level.WARNING,
+                    "Cotação em cache utilizada após falha do Oráculo: data={0}, valor={1}",
+                    new Object[] { atual.getData(), atual.getValor() });
         }
 
         List<RelatorioCarteiraDTO.GanhoPerda> relatorio = new ArrayList<>();
         for (Carteira carteira : carteiras) {
             relatorio.add(apurar(carteira, atual, desatualizada));
         }
+        LOG.log(Level.INFO, "Relatório de ganho/perda gerado: carteiras={0}, cotação={1}",
+                new Object[] { relatorio.size(), atual.getData() });
         return relatorio;
     }
 

@@ -181,6 +181,9 @@ public class MovimentacaoController {
         for (Movimentacao m : todas) {
             saldo = m.isCompra() ? saldo.add(m.getQuantidade()) : saldo.subtract(m.getQuantidade());
             if (saldo.signum() < 0) {
+                LOG.log(Level.WARNING,
+                        "Venda recusada por saldo insuficiente: carteira={0}, data={1}, quantidade={2}",
+                        new Object[] { idCarteira, nova.getDataOperacao(), nova.getQuantidade() });
                 throw new ValidacaoException("transaction.sell.insufficientBalance");
             }
         }

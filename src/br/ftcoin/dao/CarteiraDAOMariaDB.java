@@ -88,11 +88,12 @@ public final class CarteiraDAOMariaDB implements CarteiraDAO {
                 ps.executeUpdate();
             }
         } catch (SQLException e) {
-            LOG.log(Level.SEVERE, "Falha SQL ao persistir carteira", e);
             if (e.getErrorCode() == ERRO_DUPLICADO) {
+                LOG.log(Level.WARNING, "Cadastro de carteira recusado: ID já existe={0}", carteira.getId());
                 throw new IllegalArgumentException(
                         I18n.getComParametros("wallet.error.duplicateId", String.valueOf(carteira.getId())), e);
             }
+            LOG.log(Level.SEVERE, "Falha SQL ao persistir carteira: ID=" + carteira.getId(), e);
             throw new RuntimeException(I18n.getComParametros("db.error.insert", e.getMessage()), e);
         }
     }
@@ -169,6 +170,7 @@ public final class CarteiraDAOMariaDB implements CarteiraDAO {
                 }
             }
         } catch (SQLException e) {
+            LOG.log(Level.SEVERE, "Falha SQL ao atualizar carteira: ID=" + carteira.getId(), e);
             throw new RuntimeException(I18n.getComParametros("db.error.update", e.getMessage()), e);
         }
     }
@@ -199,9 +201,11 @@ public final class CarteiraDAOMariaDB implements CarteiraDAO {
             }
         } catch (SQLException e) {
             if (e.getErrorCode() == ERRO_FK_REFERENCIADA) {
+                LOG.log(Level.WARNING, "Exclusão de carteira bloqueada por movimentações: ID={0}", id);
                 throw new IllegalStateException(
                         I18n.getComParametros("wallet.error.hasTransactions", String.valueOf(id)), e);
             }
+            LOG.log(Level.SEVERE, "Falha SQL ao excluir carteira: ID=" + id, e);
             throw new RuntimeException(I18n.getComParametros("db.error.delete", e.getMessage()), e);
         }
     }
@@ -224,6 +228,7 @@ public final class CarteiraDAOMariaDB implements CarteiraDAO {
                 }
             }
         } catch (SQLException e) {
+            LOG.log(Level.SEVERE, "Falha SQL ao listar carteiras", e);
             throw new RuntimeException(I18n.getComParametros("db.error.select", e.getMessage()), e);
         }
         return lista;
