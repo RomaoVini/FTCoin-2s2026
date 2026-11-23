@@ -1,4 +1,3 @@
-```markdown
 <p align="center">
   <img src="./UNICAMP_logo.svg.png" height="80">
   <img src="./af-logo-ft-reduzido-pos.png" height="80">
