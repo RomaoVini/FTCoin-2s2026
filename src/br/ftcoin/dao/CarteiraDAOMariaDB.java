@@ -37,7 +37,6 @@ public final class CarteiraDAOMariaDB implements CarteiraDAO {
     private static final Logger LOG = Logger.getLogger(CarteiraDAOMariaDB.class.getName());
 
     /** Código de erro MariaDB/MySQL para violação de chave única (Duplicate entry). */
-    /** Código de erro MariaDB/MySQL para violação de chave única. */
     private static final int ERRO_DUPLICADO = 1062;
 
     /** Código de erro MariaDB/MySQL para violação de chave estrangeira em uso. */
