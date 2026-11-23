@@ -8,6 +8,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * Gerencia a conexão única com o banco de dados relacional MariaDB
@@ -21,6 +22,8 @@ import java.util.Map;
  * @version 2.0
  */
 public final class DatabaseConnection {
+
+    private static final Logger LOG = Logger.getLogger(DatabaseConnection.class.getName());
 
     /** URL JDBC padrão do banco, usada quando {@code MARIADB_URL} não está configurada. */
     private static final String DEFAULT_URL =
@@ -56,6 +59,7 @@ public final class DatabaseConnection {
         }
 
         this.conexao = DriverManager.getConnection(URL, USUARIO, SENHA);
+        LOG.info("Conexão MariaDB estabelecida");
     }
 
     /**
@@ -89,6 +93,7 @@ public final class DatabaseConnection {
     public synchronized void fechar() throws SQLException {
         if (conexao != null && !conexao.isClosed()) {
             conexao.close();
+            LOG.info("Conexão MariaDB fechada");
         }
     }
 

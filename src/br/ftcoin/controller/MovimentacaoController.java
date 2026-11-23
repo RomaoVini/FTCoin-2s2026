@@ -18,6 +18,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Controlador responsável por gerenciar as operações financeiras de {@link Movimentacao}
@@ -28,6 +30,8 @@ import java.util.Objects;
  * @version 2.0
  */
 public class MovimentacaoController {
+
+    private static final Logger LOG = Logger.getLogger(MovimentacaoController.class.getName());
 
     /** Repositório de acesso a dados das movimentações. */
     private final MovimentacaoDAO movimentacaoDAO;
@@ -106,6 +110,8 @@ public class MovimentacaoController {
         }
 
         movimentacaoDAO.incluir(novaMovimentacao);
+        LOG.log(Level.INFO, "Movimentação cadastrada: carteira={0}, tipo={1}, quantidade={2}",
+                new Object[] { idCarteira, tipo, quantidade });
         return novaMovimentacao;
     }
 

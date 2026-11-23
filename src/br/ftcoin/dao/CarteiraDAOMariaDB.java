@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Implementação concreta de {@link CarteiraDAO} para persistência relacional
@@ -31,6 +33,8 @@ import java.util.Optional;
  * @version 2.0
  */
 public final class CarteiraDAOMariaDB implements CarteiraDAO {
+
+    private static final Logger LOG = Logger.getLogger(CarteiraDAOMariaDB.class.getName());
 
     /** Código de erro MariaDB/MySQL para violação de chave única (Duplicate entry). */
     private static final int ERRO_DUPLICADO = 1062;
@@ -82,6 +86,7 @@ public final class CarteiraDAOMariaDB implements CarteiraDAO {
                 ps.executeUpdate();
             }
         } catch (SQLException e) {
+            LOG.log(Level.SEVERE, "Falha SQL ao persistir carteira", e);
             if (e.getErrorCode() == ERRO_DUPLICADO) {
                 throw new IllegalArgumentException(
                         I18n.getComParametros("wallet.error.duplicateId", String.valueOf(carteira.getId())), e);
@@ -110,6 +115,7 @@ public final class CarteiraDAOMariaDB implements CarteiraDAO {
                 }
             }
         } catch (SQLException e) {
+            LOG.log(Level.SEVERE, "Falha SQL ao consultar carteiras", e);
             throw new RuntimeException(I18n.getComParametros("db.error.select", e.getMessage()), e);
         }
     }

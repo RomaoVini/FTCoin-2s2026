@@ -14,6 +14,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import br.ftcoin.model.Cotacao;
 import br.ftcoin.util.I18n;
@@ -32,6 +34,8 @@ import network.NetworkResponse;
  * @version 2.0
  */
 public final class OraculoService implements OraculoCotacao {
+
+   private static final Logger LOG = Logger.getLogger(OraculoService.class.getName());
 
    /** Nome do grupo cliente usado na autenticação junto ao servidor. */
    private static final String GROUP_NAME = "POO2_2s26_A02";
@@ -215,6 +219,7 @@ public final class OraculoService implements OraculoCotacao {
             response = networkResponse;
          }
       } catch (IOException | ClassNotFoundException exception) {
+         LOG.log(Level.SEVERE, "Falha de comunicação com o oráculo", exception);
          throw new OraculoException(I18n.get("oracle.error.communication"), exception);
       }
 

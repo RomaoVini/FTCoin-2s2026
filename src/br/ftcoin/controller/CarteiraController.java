@@ -9,6 +9,8 @@ import br.ftcoin.view.MenuView;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Controlador responsável por gerenciar as operações de negócio e fluxo
@@ -19,6 +21,8 @@ import java.util.Objects;
  * @version 2.0
  */
 public class CarteiraController {
+
+    private static final Logger LOG = Logger.getLogger(CarteiraController.class.getName());
 
     /** Repositório de acesso a dados das carteiras. */
     private final CarteiraDAO dao;
@@ -93,6 +97,7 @@ public class CarteiraController {
 
         Carteira carteira = new Carteira(id, titular.trim(), corretora.trim());
         dao.incluir(carteira);
+        LOG.log(Level.INFO, "Carteira cadastrada: ID={0}", id);
         return carteira;
     }
 
@@ -113,6 +118,7 @@ public class CarteiraController {
 
         Carteira carteira = new Carteira(id, titular.trim(), corretora.trim());
         dao.editar(carteira);
+        LOG.log(Level.INFO, "Carteira atualizada: ID={0}", id);
         return carteira;
     }
 
@@ -129,7 +135,9 @@ public class CarteiraController {
 
         try {
             dao.excluir(id);
+            LOG.log(Level.INFO, "Carteira excluída: ID={0}", id);
         } catch (IllegalStateException e) {
+            LOG.log(Level.WARNING, "Exclusão de carteira bloqueada: ID={0}", id);
             throw new ValidacaoException("wallet.error.hasTransactions", String.valueOf(id));
         }
     }

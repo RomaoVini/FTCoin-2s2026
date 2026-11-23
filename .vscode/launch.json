@@ -7,7 +7,7 @@
             "request": "launch",
             "mainClass": "br.ftcoin.Main",
             "args": ["MEMORIA"],
-            "vmArgs": "-Dfile.encoding=UTF-8 -Duser.language=pt -Duser.country=BR"
+            "vmArgs": "-Duser.language=pt -Duser.country=BR"
         },
         {
             "type": "java",
@@ -15,7 +15,7 @@
             "request": "launch",
             "mainClass": "br.ftcoin.Main",
             "args": ["MEMORIA"],
-            "vmArgs": "-Dfile.encoding=UTF-8 -Duser.language=en -Duser.country=US"
+            "vmArgs": "-Duser.language=en -Duser.country=US"
         },
         {
             "type": "java",
@@ -23,7 +23,7 @@
             "request": "launch",
             "mainClass": "br.ftcoin.Main",
             "args": ["MEMORIA"],
-            "vmArgs": "-Dfile.encoding=UTF-8 -Duser.language=es -Duser.country=ES"
+            "vmArgs": "-Duser.language=es -Duser.country=ES"
         },
         {
             "type": "java",
@@ -31,7 +31,7 @@
             "request": "launch",
             "mainClass": "br.ftcoin.Main",
             "args": ["MARIADB"],
-            "vmArgs": "-Dfile.encoding=UTF-8 -Duser.language=pt -Duser.country=BR"
+            "vmArgs": "-Duser.language=pt -Duser.country=BR"
         }
     ]
 }

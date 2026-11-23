@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Implementação concreta de {@link MovimentacaoDAO} para persistência relacional
@@ -36,6 +38,8 @@ import java.util.Optional;
  * @version 2.0
  */
 public final class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
+
+    private static final Logger LOG = Logger.getLogger(MovimentacaoDAOMariaDB.class.getName());
 
     /** Código de erro MariaDB/MySQL para violação de chave estrangeira ao inserir/atualizar registro filho. */
     private static final int ERRO_FK_INEXISTENTE = 1452;
@@ -93,6 +97,7 @@ public final class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
                 }
             }
         } catch (SQLException e) {
+            LOG.log(Level.SEVERE, "Falha SQL ao persistir movimentação", e);
             if (e.getErrorCode() == ERRO_FK_INEXISTENTE) {
                 throw new IllegalArgumentException(
                         I18n.getComParametros("transaction.wallet.notFound", String.valueOf(m.getIdCarteira())), e);

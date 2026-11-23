@@ -8,6 +8,7 @@ import br.ftcoin.enums.MenuOperacao;
 import br.ftcoin.service.OraculoCotacao;
 import br.ftcoin.service.OraculoService;
 import br.ftcoin.util.DatabaseConnection;
+import br.ftcoin.util.ConsoleEncoding;
 import br.ftcoin.util.I18n;
 import br.ftcoin.view.ConsoleUtils;
 import br.ftcoin.view.MenuView;
@@ -15,6 +16,8 @@ import br.ftcoin.view.MenuView;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Controlador principal (Orquestrador) do sistema FT_Coin.
@@ -25,6 +28,8 @@ import java.util.Scanner;
  * @version 2.0
  */
 public class AppController {
+
+    private static final Logger LOG = Logger.getLogger(AppController.class.getName());
 
     /** View responsável por exibir menus e capturar a opção escolhida. */
     private final MenuView menuView;
@@ -59,7 +64,7 @@ public class AppController {
     public AppController(String tipoPersistencia) {
         this.tipoPersistencia = (tipoPersistencia != null) ? tipoPersistencia.toUpperCase() : "MEMORIA";
 
-        Scanner scanner = new Scanner(System.in);
+        Scanner scanner = new Scanner(System.in, ConsoleEncoding.getCharset());
         this.consoleUtils = new ConsoleUtils(scanner);
         this.menuView = new MenuView(consoleUtils);
 
@@ -97,6 +102,7 @@ public class AppController {
      * e garante o encerramento limpo das conexões ao finalizar o loop.
      */
     public void iniciar() {
+        LOG.log(Level.INFO, "Aplicação iniciada com persistência {0}", tipoPersistencia);
         while (executando) {
             exibirEProcessarMenuPrincipal();
         }
@@ -156,10 +162,12 @@ public class AppController {
         if ("MARIADB".equals(this.tipoPersistencia)) {
             try {
                 DatabaseConnection.getInstancia().fechar();
-            } catch (SQLException ignored) {
-                // Caso a conexão nem tenha sido aberta durante a sessão, ignora silenciosamente
+                LOG.info("Conexão MariaDB encerrada");
+            } catch (SQLException e) {
+                LOG.log(Level.WARNING, "Não foi possível fechar a conexão MariaDB", e);
             }
         }
+        LOG.info("Aplicação encerrada");
         consoleUtils.exibirSucesso(I18n.get("mainMenu.exit"));
     }
 }
