@@ -27,3 +27,4 @@ desktop.ini
 
 # Local service credentials
 oraculo.env
+mariadb.env

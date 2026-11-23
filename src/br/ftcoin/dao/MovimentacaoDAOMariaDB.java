@@ -22,13 +22,13 @@ import java.util.Optional;
  *
  * <p><b>Estrutura esperada da tabela no MariaDB:</b></p>
  * <pre>{@code
- * CREATE TABLE movimentacao (
- *     id_movimento  INT AUTO_INCREMENT PRIMARY KEY,
- *     id_carteira   INT NOT NULL,
- *     data_operacao DATE NOT NULL,
- *     tipo          CHAR(1) NOT NULL,
- *     quantidade    DECIMAL(20,8) NOT NULL,
- *     FOREIGN KEY (id_carteira) REFERENCES carteira(id_carteira)
+ * CREATE TABLE MOVIMENTACAO (
+ *     IdCarteira   INT NOT NULL,
+ *     IdMovimento  INT AUTO_INCREMENT PRIMARY KEY,
+ *     Data         DATE,
+ *     TipoOperacao CHAR(1),
+ *     Quantidade   DECIMAL(10,3),
+ *     FOREIGN KEY (IdCarteira) REFERENCES CARTEIRA(IdCarteira)
  * );
  * }</pre>
  *
@@ -40,33 +40,33 @@ public final class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
     /** Código de erro MariaDB/MySQL para violação de chave estrangeira ao inserir/atualizar registro filho. */
     private static final int ERRO_FK_INEXISTENTE = 1452;
 
-    /** Comando SQL para inserir uma nova movimentação (o {@code id_movimento} é gerado pelo banco). */
+    /** Comando SQL para inserir uma nova movimentação (o {@code IdMovimento} é gerado pelo banco). */
     private static final String INSERT =
-            "INSERT INTO movimentacao (id_carteira, data_operacao, tipo, quantidade) VALUES (?, ?, ?, ?)";
+            "INSERT INTO MOVIMENTACAO (IdCarteira, Data, TipoOperacao, Quantidade) VALUES (?, ?, ?, ?)";
 
     /** Comando SQL para atualizar todos os campos de uma movimentação existente. */
     private static final String UPDATE =
-            "UPDATE movimentacao SET id_carteira = ?, data_operacao = ?, tipo = ?, quantidade = ? WHERE id_movimento = ?";
+            "UPDATE MOVIMENTACAO SET IdCarteira = ?, Data = ?, TipoOperacao = ?, Quantidade = ? WHERE IdMovimento = ?";
 
     /** Comando SQL para excluir uma movimentação pelo identificador. */
     private static final String DELETE =
-            "DELETE FROM movimentacao WHERE id_movimento = ?";
+            "DELETE FROM MOVIMENTACAO WHERE IdMovimento = ?";
 
     /** Consulta SQL que busca uma movimentação pelo identificador. */
     private static final String SELECT_ID =
-            "SELECT id_movimento, id_carteira, data_operacao, tipo, quantidade FROM movimentacao WHERE id_movimento = ?";
+            "SELECT IdMovimento, IdCarteira, Data, TipoOperacao, Quantidade FROM MOVIMENTACAO WHERE IdMovimento = ?";
 
     /** Consulta SQL que lista todas as movimentações, das mais recentes para as mais antigas. */
     private static final String SELECT_ALL =
-            "SELECT id_movimento, id_carteira, data_operacao, tipo, quantidade FROM movimentacao ORDER BY data_operacao DESC, id_movimento DESC";
+            "SELECT IdMovimento, IdCarteira, Data, TipoOperacao, Quantidade FROM MOVIMENTACAO ORDER BY Data DESC, IdMovimento DESC";
 
     /** Consulta SQL que lista as movimentações de uma carteira, das mais recentes para as mais antigas. */
     private static final String SELECT_CARTEIRA =
-            "SELECT id_movimento, id_carteira, data_operacao, tipo, quantidade FROM movimentacao WHERE id_carteira = ? ORDER BY data_operacao DESC, id_movimento DESC";
+            "SELECT IdMovimento, IdCarteira, Data, TipoOperacao, Quantidade FROM MOVIMENTACAO WHERE IdCarteira = ? ORDER BY Data DESC, IdMovimento DESC";
 
     /**
      * {@inheritDoc}
-     * <p>Recupera automaticamente o {@code id_movimento} gerado pelo banco via {@code AUTO_INCREMENT}
+     * <p>Recupera automaticamente o {@code IdMovimento} gerado pelo banco via {@code AUTO_INCREMENT}
      * e o atribui à instância recebida.</p>
      *
      * @throws IllegalArgumentException se a movimentação for nula ou a carteira referenciada não existir no banco.
@@ -239,11 +239,11 @@ public final class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
      */
     private Movimentacao mapear(ResultSet rs) throws SQLException {
         return new Movimentacao(
-                rs.getInt("id_movimento"),
-                rs.getInt("id_carteira"),
-                rs.getDate("data_operacao").toLocalDate(),
-                rs.getString("tipo").charAt(0),
-                rs.getBigDecimal("quantidade")
+                rs.getInt("IdMovimento"),
+                rs.getInt("IdCarteira"),
+                rs.getDate("Data").toLocalDate(),
+                rs.getString("TipoOperacao").charAt(0),
+                rs.getBigDecimal("Quantidade")
         );
     }
 }

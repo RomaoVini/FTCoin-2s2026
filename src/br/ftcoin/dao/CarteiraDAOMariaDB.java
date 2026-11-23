@@ -20,10 +20,10 @@ import java.util.Optional;
  *
  * <p><b>Estrutura esperada da tabela no MariaDB:</b></p>
  * <pre>{@code
- * CREATE TABLE carteira (
- *     id_carteira INT PRIMARY KEY,
- *     titular     VARCHAR(100) NOT NULL,
- *     corretora   VARCHAR(100) NOT NULL
+ * CREATE TABLE CARTEIRA (
+ *     IdCarteira INT AUTO_INCREMENT PRIMARY KEY,
+ *     Titular    VARCHAR(50) NOT NULL,
+ *     Corretora  VARCHAR(50) NOT NULL
  * );
  * }</pre>
  *
@@ -40,27 +40,27 @@ public final class CarteiraDAOMariaDB implements CarteiraDAO {
 
     /** Comando SQL para inserir uma nova carteira. */
     private static final String INSERT =
-            "INSERT INTO carteira (id_carteira, titular, corretora) VALUES (?, ?, ?)";
+            "INSERT INTO CARTEIRA (IdCarteira, Titular, Corretora) VALUES (?, ?, ?)";
 
     /** Comando SQL para atualizar titular e corretora de uma carteira existente. */
     private static final String UPDATE =
-            "UPDATE carteira SET titular = ?, corretora = ? WHERE id_carteira = ?";
+            "UPDATE CARTEIRA SET Titular = ?, Corretora = ? WHERE IdCarteira = ?";
 
     /** Comando SQL para excluir uma carteira pelo identificador. */
     private static final String DELETE =
-            "DELETE FROM carteira WHERE id_carteira = ?";
+            "DELETE FROM CARTEIRA WHERE IdCarteira = ?";
 
     /** Consulta SQL que busca uma carteira pelo identificador. */
     private static final String SELECT_ID =
-            "SELECT id_carteira, titular, corretora FROM carteira WHERE id_carteira = ?";
+            "SELECT IdCarteira, Titular, Corretora FROM CARTEIRA WHERE IdCarteira = ?";
 
     /** Consulta SQL que lista todas as carteiras em ordem crescente de identificador. */
     private static final String SELECT_ALL =
-            "SELECT id_carteira, titular, corretora FROM carteira ORDER BY id_carteira ASC";
+            "SELECT IdCarteira, Titular, Corretora FROM CARTEIRA ORDER BY IdCarteira ASC";
 
     /** Consulta SQL que lista todas as carteiras em ordem alfabética de titular. */
     private static final String SELECT_ALL_BY_HOLDER =
-            "SELECT id_carteira, titular, corretora FROM carteira ORDER BY titular ASC";
+            "SELECT IdCarteira, Titular, Corretora FROM CARTEIRA ORDER BY Titular ASC";
 
     /**
      * {@inheritDoc}
@@ -223,9 +223,9 @@ public final class CarteiraDAOMariaDB implements CarteiraDAO {
      */
     private Carteira mapear(ResultSet rs) throws SQLException {
         return new Carteira(
-                rs.getInt("id_carteira"),
-                rs.getString("titular"),
-                rs.getString("corretora")
+                rs.getInt("IdCarteira"),
+                rs.getString("Titular"),
+                rs.getString("Corretora")
         );
     }
 }
