@@ -1,13 +1,13 @@
 package br.ftcoin.dao;
 
 /**
- * Classe abstrata que implementa o padrão de projeto <b>Abstract Factory</b>
- * para criação de famílias de objetos de acesso a dados (DAOs).
+ * Classe abstrata que aplica o padrão de projeto <b>Abstract Factory</b>
+ * para criar famílias de objetos de acesso a dados (DAOs).
  *
- * <p>Permite que a aplicação alterne de forma transparente entre a persistência
+ * <p>Permite que a aplicação alterne entre a persistência
  * em memória local ({@link MemoriaDAOFactory}) e a persistência relacional
- * no banco de dados MariaDB ({@link MariaDBDAOFactory}) sem acoplar os
- * controladores às implementações concretas.</p>
+ * no banco MariaDB ({@link MariaDBDAOFactory}) sem acoplar os controladores
+ * às implementações concretas.</p>
  *
  * @author Equipe FT_Coin
  * @version 2.0
@@ -24,7 +24,7 @@ public abstract class DAOFactory {
      * Cria e retorna a implementação concreta de {@link CarteiraDAO}
      * correspondente à fábrica ativa.
      *
-     * @return Instância de {@link CarteiraDAO}.
+     * @return implementação ativa de {@link CarteiraDAO}
      */
     public abstract CarteiraDAO getCarteiraDAO();
 
@@ -32,19 +32,19 @@ public abstract class DAOFactory {
      * Cria e retorna a implementação concreta de {@link MovimentacaoDAO}
      * correspondente à fábrica ativa.
      *
-     * @return Instância de {@link MovimentacaoDAO}.
+     * @return implementação ativa de {@link MovimentacaoDAO}
      */
     public abstract MovimentacaoDAO getMovimentacaoDAO();
 
     /**
-     * Método Factory estático responsável por instanciar a fábrica concreta
-     * adequada conforme o parâmetro de configuração informado na inicialização.
+     * Instancia a fábrica concreta adequada ao modo de persistência informado.
      *
      * <p>Caso o parâmetro seja nulo, vazio ou diferente de {@code "MARIADB"},
      * a fábrica de memória ({@link MemoriaDAOFactory}) será adotada como padrão.</p>
      *
-     * @param tipoPersistencia Identificador do modo de armazenamento ({@code "MEMORIA"} ou {@code "MARIADB"}).
-     * @return Instância concreta de {@link DAOFactory}.
+     * @param tipoPersistencia identificador do modo de armazenamento
+     *                         ({@code "MEMORIA"} ou {@code "MARIADB"})
+     * @return instância concreta de {@link DAOFactory}
      */
     public static DAOFactory getFactory(String tipoPersistencia) {
         if (TIPO_MARIADB.equalsIgnoreCase(tipoPersistencia != null ? tipoPersistencia.trim() : "")) {

@@ -14,6 +14,9 @@ import java.util.TreeMap;
  *
  * <p>Os dados ficam disponíveis somente enquanto a instância existir; novos
  * identificadores são atribuídos automaticamente quando necessário.</p>
+ *
+ * @author Equipe FT_Coin
+ * @version 2.0
  */
 public final class MovimentacaoDAOMemoria implements MovimentacaoDAO {
 
@@ -59,9 +62,9 @@ public final class MovimentacaoDAOMemoria implements MovimentacaoDAO {
     }
 
     /**
-     * Retorna todas as movimentações armazenadas em uma nova lista.
+     * Retorna todas as movimentações em uma nova lista ordenada pelo identificador.
      *
-     * @return cópia da lista de movimentações
+     * @return cópia da lista de movimentações (pode ser vazia)
      */
     @Override
     public List<Movimentacao> consultarTodos(){
@@ -73,7 +76,7 @@ public final class MovimentacaoDAOMemoria implements MovimentacaoDAO {
      * empate na data, por identificador crescente.
      *
      * @param idCarteira identificador da carteira
-     * @return movimentações associadas à carteira
+     * @return movimentações associadas à carteira (pode ser vazia)
      */
     @Override
     public List<Movimentacao> consultarPorCarteira(int idCarteira) {

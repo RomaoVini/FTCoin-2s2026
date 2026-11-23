@@ -100,6 +100,16 @@ public final class OraculoService implements OraculoCotacao {
       this(host, port, groupName, groupPassword, false);
    }
 
+   /**
+    * Valida e armazena as configurações do servidor e do grupo cliente.
+    *
+    * @param host endereço do servidor
+    * @param port porta do servidor
+    * @param groupName nome do grupo cliente
+    * @param groupPassword credencial do grupo, possivelmente ausente quando a configuração padrão é usada
+    * @param allowMissingConfiguredPassword indica se a senha configurada pode estar ausente
+    * @throws IllegalArgumentException se o endereço, a porta ou as credenciais obrigatórias forem inválidos
+    */
    private OraculoService(String host, int port, String groupName, String groupPassword,
          boolean allowMissingConfiguredPassword) {
       if (host == null || host.isBlank()) {

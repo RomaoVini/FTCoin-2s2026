@@ -18,8 +18,8 @@ import java.util.Scanner;
 
 /**
  * Controlador principal (Orquestrador) do sistema FT_Coin.
- * Gerencia o ciclo de vida da aplicação, o loop do Menu Principal,
- * a injeção de dependências nos sub-controllers e o encerramento seguro de recursos.
+ * Gerencia o ciclo de vida da aplicação, o loop do menu principal,
+ * a inicialização dos sub-controladores e o encerramento dos recursos.
  *
  * @author Equipe FT_Coin
  * @version 2.0
@@ -51,10 +51,12 @@ public class AppController {
     private boolean executando;
 
     /**
-     * Inicializa a aplicação configurando a interface CLI, a fábrica de DAOs
-     * conforme o modo de persistência e injetando as dependências nos sub-controllers.
+     * Inicializa a interface CLI, a fábrica de DAOs conforme o modo de persistência
+     * e os controladores especializados das funcionalidades do sistema.
      *
-     * @param tipoPersistencia Tipo de armazenamento ({@code "MEMORIA"} ou {@code "MARIADB"}) informado na CLI.
+     * @param tipoPersistencia modo de persistência informado na CLI;
+     *                         {@code "MARIADB"} ativa a persistência no banco e
+     *                         qualquer outro valor seleciona a persistência em memória
      */
     public AppController(String tipoPersistencia) {
         this.tipoPersistencia = (tipoPersistencia != null) ? tipoPersistencia.toUpperCase() : "MEMORIA";
@@ -94,7 +96,7 @@ public class AppController {
 
     /**
      * Inicia a execução contínua da interface de linha de comando (CLI)
-     * e garante o encerramento limpo das conexões ao finalizar o loop.
+     * até o usuário escolher a opção de saída, momento em que encerra os recursos.
      */
     public void iniciar() {
         while (executando) {
@@ -105,8 +107,10 @@ public class AppController {
     }
 
     /**
-     * Renderiza as opções do Menu Principal e direciona o fluxo
-     * para o sub-controller correspondente à escolha do usuário.
+     * Renderiza as opções do menu principal e direciona a escolha do usuário
+     * ao sub-controlador correspondente.
+     *
+     * @throws br.ftcoin.exception.ValidacaoException se a opção escolhida não existir
      */
     private void exibirEProcessarMenuPrincipal() {
         int escolha = menuView.exibirEObterOpcao(
@@ -128,7 +132,7 @@ public class AppController {
 
     /**
      * Exibe o submenu de seleção de idiomas e atualiza dinamicamente
-     * o {@link java.util.ResourceBundle} ativo do sistema.
+     * o idioma utilizado pelo {@link I18n}.
      */
     private void alterarIdioma() {
         List<String> opcoesIdioma = List.of(

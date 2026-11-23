@@ -16,9 +16,11 @@ import java.util.Objects;
  */
 public class AjudaView {
 
+    /** Formato da data e hora de acesso exibida na tela de créditos. */
     private static final DateTimeFormatter FORMATO_DATA_ACESSO =
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
 
+    /** Utilitário de console usado para pausar a tela após a exibição. */
     private final ConsoleUtils consoleUtils;
 
     /**

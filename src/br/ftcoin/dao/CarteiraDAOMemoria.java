@@ -15,7 +15,7 @@ import java.util.Optional;
 /**
  * Implementação concreta de {@link CarteiraDAO} para persistência volátil em memória local
  * utilizando {@link LinkedHashMap}.
- * Declarada como {@code final} por integrar a hierarquia selada de {@link CarteiraDAO}.
+ * É declarada como {@code final} por integrar a hierarquia selada de {@link CarteiraDAO}.
  *
  * @author Equipe FT_Coin
  * @version 2.0
@@ -29,7 +29,7 @@ public final class CarteiraDAOMemoria implements CarteiraDAO {
     private final MovimentacaoDAO movimentacaoDAO;
 
     /**
-     * Cria um DAO de carteiras independente, sem movimentações associadas.
+     * Cria um DAO de carteiras com um repositório próprio de movimentações em memória.
      */
     public CarteiraDAOMemoria() {
         this(new MovimentacaoDAOMemoria());
@@ -49,7 +49,7 @@ public final class CarteiraDAOMemoria implements CarteiraDAO {
     /**
      * {@inheritDoc}
      *
-     * @throws IllegalArgumentException se a carteira for nula ou se o ID já estiver cadastrado.
+     * @throws IllegalArgumentException se a carteira for nula ou o ID já estiver cadastrado
      */
     @Override
     public void incluir(Carteira carteira) {
@@ -70,7 +70,8 @@ public final class CarteiraDAOMemoria implements CarteiraDAO {
     /**
      * {@inheritDoc}
      *
-     * @throws IllegalArgumentException se o {@code id} informado for nulo.
+     * @return a carteira encontrada, ou {@link Optional#empty()} se o ID não estiver cadastrado
+     * @throws IllegalArgumentException se o {@code id} informado for nulo
      */
     @Override
     public Optional<Carteira> consultar(Integer id) {
@@ -84,7 +85,9 @@ public final class CarteiraDAOMemoria implements CarteiraDAO {
     /**
      * {@inheritDoc}
      * <p>Retorna as carteiras ordenadas de forma crescente pelo seu identificador (ID),
-     * espelhando o comportamento da consulta relacional no MariaDB.</p>
+     * em uma nova lista que não altera o mapa interno.</p>
+     *
+     * @return lista de carteiras ordenada pelo ID
      */
     @Override
     public List<Carteira> consultarTodos() {
@@ -95,6 +98,9 @@ public final class CarteiraDAOMemoria implements CarteiraDAO {
 
     /**
      * {@inheritDoc}
+     *
+     * @return lista de carteiras ordenada pelo nome do titular, ignorando diferenças
+     *         entre maiúsculas e minúsculas
      */
     @Override
     public List<Carteira> consultarTodasOrdenadasPorTitular() {
@@ -106,8 +112,8 @@ public final class CarteiraDAOMemoria implements CarteiraDAO {
     /**
      * {@inheritDoc}
      *
-     * @throws IllegalArgumentException se a carteira for nula.
-     * @throws NoSuchElementException   se nenhuma carteira com o ID especificado for encontrada.
+     * @throws IllegalArgumentException se a carteira for nula
+     * @throws NoSuchElementException se nenhuma carteira com o ID especificado for encontrada
      */
     @Override
     public void editar(Carteira carteira) {
@@ -128,9 +134,9 @@ public final class CarteiraDAOMemoria implements CarteiraDAO {
     /**
      * {@inheritDoc}
      *
-     * @throws IllegalArgumentException se o {@code id} informado for nulo.
-     * @throws NoSuchElementException   se a carteira não existir no mapa em memória.
-     * @throws IllegalStateException    se a carteira possuir movimentações vinculadas.
+     * @throws IllegalArgumentException se o {@code id} informado for nulo
+     * @throws NoSuchElementException se a carteira não existir no mapa em memória
+     * @throws IllegalStateException se a carteira possuir movimentações vinculadas
      */
     @Override
     public void excluir(Integer id) {

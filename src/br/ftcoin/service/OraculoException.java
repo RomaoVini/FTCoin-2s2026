@@ -4,6 +4,7 @@ package br.ftcoin.service;
  * Falha de domínio ao obter ou interpretar uma cotação.
  */
 public class OraculoException extends RuntimeException {
+   /** Identificador de versão para serialização. */
    private static final long serialVersionUID = 1L;
 
    /**

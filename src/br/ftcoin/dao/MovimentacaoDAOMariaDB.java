@@ -18,7 +18,7 @@ import java.util.Optional;
 /**
  * Implementação concreta de {@link MovimentacaoDAO} para persistência relacional
  * no banco de dados MariaDB via JDBC.
- * Declarada como {@code final} por integrar a hierarquia selada de {@link MovimentacaoDAO}.
+ * É declarada como {@code final} por integrar a hierarquia selada de {@link MovimentacaoDAO}.
  *
  * <p><b>Estrutura esperada da tabela no MariaDB:</b></p>
  * <pre>{@code
@@ -37,7 +37,7 @@ import java.util.Optional;
  */
 public final class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
 
-    /** Código de erro MariaDB/MySQL para violação de chave estrangeira ao inserir/atualizar registro filho. */
+    /** Código de erro MariaDB/MySQL para chave estrangeira inexistente ao inserir ou atualizar. */
     private static final int ERRO_FK_INEXISTENTE = 1452;
 
     /** Comando SQL para inserir uma nova movimentação (o {@code IdMovimento} é gerado pelo banco). */
@@ -69,7 +69,8 @@ public final class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
      * <p>Recupera automaticamente o {@code IdMovimento} gerado pelo banco via {@code AUTO_INCREMENT}
      * e o atribui à instância recebida.</p>
      *
-     * @throws IllegalArgumentException se a movimentação for nula ou a carteira referenciada não existir no banco.
+     * @throws IllegalArgumentException se a movimentação for nula ou a carteira referenciada não existir
+     * @throws RuntimeException se ocorrer outro erro de acesso ao banco
      */
     @Override
     public void incluir(Movimentacao m) {
@@ -104,8 +105,9 @@ public final class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
     /**
      * {@inheritDoc}
      *
-     * @throws IllegalArgumentException se a movimentação for nula ou a carteira referenciada não existir no banco.
-     * @throws NoSuchElementException   se nenhuma movimentação com o ID informado for encontrada.
+     * @throws IllegalArgumentException se a movimentação for nula ou a carteira referenciada não existir
+     * @throws NoSuchElementException se nenhuma movimentação com o ID informado for encontrada
+     * @throws RuntimeException se ocorrer outro erro de acesso ao banco
      */
     @Override
     public void editar(Movimentacao m) {
@@ -139,8 +141,9 @@ public final class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
     /**
      * {@inheritDoc}
      *
-     * @throws IllegalArgumentException se o {@code id} informado for nulo.
-     * @throws NoSuchElementException   se nenhuma movimentação com o ID informado for encontrada.
+     * @throws IllegalArgumentException se o {@code id} informado for nulo
+     * @throws NoSuchElementException se nenhuma movimentação com o ID informado for encontrada
+     * @throws RuntimeException se ocorrer erro de acesso ao banco
      */
     @Override
     public void excluir(Integer id) {
@@ -166,7 +169,8 @@ public final class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
     /**
      * {@inheritDoc}
      *
-     * @throws IllegalArgumentException se o {@code id} informado for nulo.
+     * @throws IllegalArgumentException se o {@code id} informado for nulo
+     * @throws RuntimeException se ocorrer erro de acesso ao banco
      */
     @Override
     public Optional<Movimentacao> consultar(Integer id) {
@@ -189,6 +193,10 @@ public final class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
 
     /**
      * {@inheritDoc}
+     *
+     * @return movimentações em ordem decrescente de data e, em caso de empate,
+     *         em ordem decrescente de identificador
+     * @throws RuntimeException se ocorrer erro de acesso ao banco
      */
     @Override
     public List<Movimentacao> consultarTodos() {
@@ -209,6 +217,10 @@ public final class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
 
     /**
      * {@inheritDoc}
+     *
+     * @return movimentações da carteira em ordem decrescente de data e, em caso de empate,
+     *         em ordem decrescente de identificador
+     * @throws RuntimeException se ocorrer erro de acesso ao banco
      */
     @Override
     public List<Movimentacao> consultarPorCarteira(int idCarteira) {
@@ -233,9 +245,9 @@ public final class MovimentacaoDAOMariaDB implements MovimentacaoDAO {
      * Converte a linha atual do {@link ResultSet} em uma instância de {@link Movimentacao},
      * utilizando o construtor que converte o caractere {@code 'C'} ou {@code 'V'} do banco.
      *
-     * @param rs Resultado da consulta, posicionado na linha a ser convertida.
-     * @return A {@link Movimentacao} correspondente à linha atual.
-     * @throws SQLException se ocorrer erro ao ler as colunas do resultado.
+     * @param rs resultado da consulta posicionado na linha a ser convertida
+     * @return {@link Movimentacao} correspondente à linha atual
+     * @throws SQLException se ocorrer erro ao ler as colunas do resultado
      */
     private Movimentacao mapear(ResultSet rs) throws SQLException {
         return new Movimentacao(

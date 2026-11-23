@@ -50,14 +50,14 @@ public record RelatorioCarteiraDTO(int id, String titular, String corretora,
     /**
      * Linha da apuração de ganho ou perda, uma para cada operação da carteira.
      *
-     * @param data               data da operação
-     * @param tipoChave          chave de internacionalização do tipo (compra ou venda)
-     * @param quantidade         quantidade movimentada
-     * @param preco              cotação da FTCoin na data da operação
-     * @param saldo              saldo de FTCoins após a operação
-     * @param resultadoOperacao  resultado da operação (zero para compras)
-     * @param resultadoAcumulado resultado acumulado até a operação
-     * @param custoMedio         custo médio após a operação
+     * @param data               data formatada da operação
+     * @param tipoChave          chave de internacionalização do tipo da operação
+     * @param quantidade         quantidade movimentada, já formatada
+     * @param preco              cotação da FTCoin na data da operação, já formatada
+     * @param saldo              saldo de FTCoins após a operação, já formatado
+     * @param resultadoOperacao  resultado da operação, zero para compras
+     * @param resultadoAcumulado resultado acumulado das vendas até a operação
+     * @param custoMedio         custo médio unitário após a operação
      */
     public record OperacaoApurada(String data, String tipoChave, String quantidade, String preco,
                                   String saldo, String resultadoOperacao,
@@ -75,9 +75,10 @@ public record RelatorioCarteiraDTO(int id, String titular, String corretora,
      * @param resultadoAcumulado   resultado já realizado pelas vendas (Res. Acum.)
      * @param saldoMercado         cotação atual multiplicada pela quantidade atual (Sd. Merc.)
      * @param resultadoPotencial   resultado total caso a posição atual fosse vendida pela cotação atual
-     * @param cotacaoAtual         cotação utilizada na valoração a mercado
+     * @param cotacaoAtual         cotação atual utilizada na valoração a mercado
      * @param dataCotacao          data da cotação utilizada
-     * @param cotacaoDesatualizada {@code true} se foi usada a última cotação em cache por falha do Oráculo
+     * @param cotacaoDesatualizada {@code true} se foi usada a última cotação conhecida
+     *                             porque o oráculo falhou ao fornecer a cotação atual
      */
     public record GanhoPerda(int id, String titular, String corretora,
                              List<OperacaoApurada> operacoes,

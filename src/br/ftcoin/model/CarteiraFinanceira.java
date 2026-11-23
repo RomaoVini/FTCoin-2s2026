@@ -12,14 +12,28 @@ import java.util.Objects;
  * Acumulador das métricas financeiras de uma carteira.
  */
 public final class CarteiraFinanceira {
+    /** Escala usada para o cálculo do custo médio unitário. */
     private static final int ESCALA_CUSTO_MEDIO = 20;
 
+    /** Quantidade de moedas atualmente mantida na carteira. */
     private BigDecimal saldoQuantidade = BigDecimal.ZERO;
+
+    /** Custo médio de aquisição por moeda. */
     private BigDecimal custoMedio = BigDecimal.ZERO;
+
+    /** Valor total pago pelas compras registradas. */
     private BigDecimal totalComprado = BigDecimal.ZERO;
+
+    /** Valor total recebido pelas vendas registradas. */
     private BigDecimal totalVendido = BigDecimal.ZERO;
+
+    /** Resultado operacional da última movimentação registrada. */
     private BigDecimal resultadoOperacional = BigDecimal.ZERO;
+
+    /** Soma dos resultados operacionais das vendas registradas. */
     private BigDecimal resultadoAcumulado = BigDecimal.ZERO;
+
+    /** Cotação usada para calcular o valor de mercado atual. */
     private Cotacao cotacaoAtual;
 
     /**
@@ -28,6 +42,8 @@ public final class CarteiraFinanceira {
      * @param movimentacao movimentação a registrar
      * @param cotacao cotação válida na data da movimentação
      * @return o resultado operacional da movimentação (zero para compras)
+     * @throws NullPointerException se a movimentação ou a cotação for nula
+     * @throws ValidacaoException se uma venda exceder o saldo disponível
      */
     public BigDecimal registrarMovimentacao(Movimentacao movimentacao, Cotacao cotacao) {
         Objects.requireNonNull(movimentacao, "Movimentação obrigatória");
@@ -58,6 +74,7 @@ public final class CarteiraFinanceira {
      *
      * @param movimentacoes histórico de movimentações
      * @return saldo de moedas após aplicar todas as operações
+     * @throws NullPointerException se a lista ou alguma movimentação for nula
      * @throws ValidacaoException se uma venda exceder o saldo disponível
      */
     public static BigDecimal calcularSaldoQuantidade(List<Movimentacao> movimentacoes) {
@@ -73,6 +90,14 @@ public final class CarteiraFinanceira {
         return saldo;
     }
 
+    /**
+     * Aplica ao saldo a quantidade comprada ou vendida e rejeita saldo negativo.
+     *
+     * @param saldoAnterior saldo antes da movimentação
+     * @param movimentacao operação que altera o saldo
+     * @return saldo após a movimentação
+     * @throws ValidacaoException se a venda exceder o saldo anterior
+     */
     private static BigDecimal aplicarQuantidade(BigDecimal saldoAnterior, Movimentacao movimentacao) {
         BigDecimal saldoNovo = movimentacao.isCompra()
                 ? saldoAnterior.add(movimentacao.getQuantidade())
@@ -83,6 +108,12 @@ public final class CarteiraFinanceira {
         return saldoNovo;
     }
 
+    /**
+     * Define a cotação usada nos cálculos do valor de mercado da carteira.
+     *
+     * @param cotacaoAtual cotação atual da moeda
+     * @throws NullPointerException se a cotação for nula
+     */
     public void atualizarCotacaoAtual(Cotacao cotacaoAtual) {
         this.cotacaoAtual = Objects.requireNonNull(cotacaoAtual, "Cotação atual obrigatória");
     }
@@ -152,6 +183,12 @@ public final class CarteiraFinanceira {
         return totalVendido.add(getSaldoMercado()).subtract(totalComprado);
     }
 
+    /**
+     * Retorna a cotação atual ou falha se ainda não tiver sido definida.
+     *
+     * @return cotação atual
+     * @throws IllegalStateException se a cotação atual ainda não tiver sido definida
+     */
     private Cotacao obterCotacaoAtual() {
         if (cotacaoAtual == null) {
             throw new IllegalStateException("Cotação atual ainda não foi definida");

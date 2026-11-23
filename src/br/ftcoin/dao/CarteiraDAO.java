@@ -5,11 +5,11 @@ import br.ftcoin.model.Carteira;
 import java.util.List;
 
 /**
- * Interface selada (Sealed Interface) que define o contrato de persistência
+ * Interface selada que define o contrato de persistência
  * para a entidade {@link Carteira}.
  *
  * <p>Estende as operações CRUD padrão de {@link DAO} utilizando {@link Integer}
- * como chave primária e restringe explicitamente as implementações permitidas
+ * como chave primária e restringe as implementações permitidas
  * às camadas de memória e banco de dados MariaDB.</p>
  *
  * @author Equipe FT_Coin
@@ -20,9 +20,9 @@ public sealed interface CarteiraDAO extends DAO<Carteira, Integer>
 
     /**
      * Recupera todas as carteiras cadastradas ordenadas alfabeticamente
-     * pelo nome do titular (ordem crescente, ignorando maiúsculas/minúsculas).
+     * pelo nome do titular.
      *
-     * @return Lista de {@link Carteira} ordenada por titular.
+     * @return lista de {@link Carteira} ordenada pelo titular
      */
     List<Carteira> consultarTodasOrdenadasPorTitular();
 }

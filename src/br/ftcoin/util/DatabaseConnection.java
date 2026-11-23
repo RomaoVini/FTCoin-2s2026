@@ -11,7 +11,8 @@ import java.util.Map;
 
 /**
  * Gerencia a conexão única com o banco de dados relacional MariaDB
- * utilizando o padrão de projeto <b>Singleton</b> (com sincronização <i>thread-safe</i>).
+ * utilizando o padrão de projeto <b>Singleton</b>. O acesso sincronizado à instância
+ * única protege sua criação e recuperação concorrentes.
  *
  * <p>As credenciais ({@code MARIADB_USER} e {@code MARIADB_PASSWORD}) são buscadas
  * primeiramente nas variáveis de ambiente do sistema operacional e, como alternativa,
@@ -73,9 +74,9 @@ public final class DatabaseConnection {
     }
 
     /**
-     * Retorna o objeto {@link Connection} JDBC ativo para execução de instruções SQL.
+     * Retorna o objeto {@link Connection} JDBC gerenciado por esta instância.
      *
-     * @return Conexão JDBC ativa.
+     * @return Conexão JDBC, que pode estar fechada caso {@link #fechar()} já tenha sido chamado.
      */
     public Connection getConexao() {
         return conexao;
